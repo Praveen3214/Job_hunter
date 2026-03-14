@@ -49,7 +49,7 @@ def enrich_jobs(df: pd.DataFrame) -> pd.DataFrame:
     df["role_summary"] = df.apply(_generate_summary, axis=1)
 
     # Salary normalization (before relevance scoring so it can use parsed values)
-    salary_parsed = df["salary"].apply(_normalize_salary)
+    salary_parsed = df.apply(_normalize_salary_row, axis=1)
     df["salary_min_lpa"] = salary_parsed.apply(lambda t: t[0])
     df["salary_max_lpa"] = salary_parsed.apply(lambda t: t[1])
     df["salary_normalized"] = salary_parsed.apply(lambda t: t[2])
@@ -260,6 +260,58 @@ def _extract_experience_range(row) -> tuple:
 
 
 # ── Salary normalization ────────────────────────────────────────────
+
+def _normalize_salary_row(row) -> tuple:
+    """Row-level wrapper: try text 'salary' first, then structured min/max fields."""
+    # Try the text salary column
+    result = _normalize_salary(row.get("salary"))
+    if result[0] is not None:
+        return result
+
+    # Fallback: structured min_amount / max_amount (from python-jobspy)
+    try:
+        min_amt = row.get("min_amount")
+        max_amt = row.get("max_amount")
+        currency = str(row.get("currency", "")).upper()
+
+        if pd.notna(min_amt) or pd.notna(max_amt):
+            lo = float(min_amt) if pd.notna(min_amt) and min_amt else 0
+            hi = float(max_amt) if pd.notna(max_amt) and max_amt else lo
+
+            if lo <= 0 and hi <= 0:
+                return (None, None, "")
+
+            # Determine if the values are yearly or need conversion
+            interval = str(row.get("interval", "")).lower()
+
+            if currency in ("INR", ""):
+                # Check if it's LPA already or absolute
+                if interval == "monthly" or (lo > 0 and lo < 500 and hi < 500):
+                    # Monthly salary or already in lakhs
+                    if lo > 999:
+                        lo_lpa = _to_lpa(lo * 12 if interval == "monthly" else lo, False)
+                        hi_lpa = _to_lpa(hi * 12 if interval == "monthly" else hi, False)
+                    else:
+                        lo_lpa = lo
+                        hi_lpa = hi
+                else:
+                    lo_lpa = _to_lpa(lo, interval == "monthly")
+                    hi_lpa = _to_lpa(hi, interval == "monthly")
+
+                return _format_salary_result(lo_lpa, hi_lpa)
+
+            elif currency == "USD":
+                # Convert USD to approximate INR LPA (1 USD ~ 85 INR)
+                lo_inr = lo * 85
+                hi_inr = hi * 85
+                lo_lpa = _to_lpa(lo_inr, interval == "monthly")
+                hi_lpa = _to_lpa(hi_inr, interval == "monthly")
+                return _format_salary_result(lo_lpa, hi_lpa)
+    except (ValueError, TypeError):
+        pass
+
+    return (None, None, "")
+
 
 def _normalize_salary(raw) -> tuple:
     """Parse Indian salary strings into structured (min_lpa, max_lpa, display).
