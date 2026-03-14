@@ -48,6 +48,9 @@ def enrich_jobs(df: pd.DataFrame) -> pd.DataFrame:
 
     df["role_summary"] = df.apply(_generate_summary, axis=1)
 
+    # Relevance scoring (0-100)
+    df["relevance_score"] = df.apply(_compute_relevance_score, axis=1)
+
     # Shortlist tag: experience ≤10, salary >27 LPA (or missing), marketing
     # in title, and first-time scrape
     df["shortlist"] = _compute_shortlist(df)
@@ -319,6 +322,138 @@ def _collect_previous_job_urls() -> set:
         except (ValueError, KeyError):
             pass
     return urls
+
+
+# ── Relevance scoring ────────────────────────────────────────────────
+
+# Tier-1 / metro cities (highest relevance for senior marketing in India)
+_TIER1_CITIES = {
+    "mumbai", "delhi", "bangalore", "bengaluru", "hyderabad",
+    "chennai", "pune", "gurugram", "gurgaon", "noida", "new delhi",
+}
+
+# Strong title signals (senior marketing roles)
+_TITLE_STRONG = [
+    "cmo", "chief marketing", "vp marketing", "vp of marketing",
+    "vice president marketing", "head of marketing", "director of marketing",
+    "marketing director", "head of growth", "director of growth",
+    "head of digital", "head of brand",
+]
+_TITLE_GOOD = [
+    "marketing", "growth", "brand", "digital marketing",
+    "product marketing", "performance marketing",
+]
+
+# Seniority signals in title
+_SENIORITY_SIGNALS = [
+    "head", "director", "vp", "vice president", "chief",
+    "lead", "senior manager", "senior director", "avp",
+    "general manager", "gm",
+]
+
+
+def _compute_relevance_score(row) -> int:
+    """Compute a 0-100 relevance score for a job.
+
+    Scoring breakdown:
+        Title match:      0-30 pts  (strong=30, good=20, weak=10, none=0)
+        Seniority:        0-15 pts  (C-level/VP=15, Director/Head=12, Lead/Sr=8)
+        Experience fit:   0-15 pts  (8-12 yrs=15, 5-15=10, outside=5, unknown=8)
+        Salary:           0-15 pts  (>40L=15, 27-40L=12, 15-27L=8, <15L=3, unknown=8)
+        Location:         0-10 pts  (Tier-1=10, India=7, Remote=6, other=3)
+        Company type:     0-10 pts  (B2C/D2C=10, B2B=8, Mixed=6, Unknown=4)
+        Freshness:        0-5 pts   (date present=5, missing=2)
+    """
+    score = 0
+    title = str(row.get("title", "")).lower()
+    location = str(row.get("location", "")).lower()
+    company_type = str(row.get("company_type", "")).lower()
+
+    # ── Title match (30 pts) ──
+    if any(t in title for t in _TITLE_STRONG):
+        score += 30
+    elif any(t in title for t in _TITLE_GOOD):
+        score += 20
+    elif "market" in title:
+        score += 10
+    # else: 0
+
+    # ── Seniority (15 pts) ──
+    if any(s in title for s in ("cmo", "chief", "vp", "vice president")):
+        score += 15
+    elif any(s in title for s in ("director", "head")):
+        score += 12
+    elif any(s in title for s in ("lead", "senior", "avp", "general manager", "gm")):
+        score += 8
+    elif any(s in title for s in ("manager",)):
+        score += 5
+
+    # ── Experience fit (15 pts) ──
+    min_exp = row.get("min_experience_years")
+    max_exp = row.get("max_experience_years")
+    try:
+        min_exp = float(min_exp) if pd.notna(min_exp) else None
+    except (ValueError, TypeError):
+        min_exp = None
+    try:
+        max_exp = float(max_exp) if pd.notna(max_exp) else None
+    except (ValueError, TypeError):
+        max_exp = None
+
+    if min_exp is not None:
+        if 8 <= min_exp <= 12:
+            score += 15
+        elif 5 <= min_exp <= 15:
+            score += 10
+        elif min_exp <= 20:
+            score += 5
+    else:
+        score += 8  # Unknown = neutral
+
+    # ── Salary (15 pts) ──
+    salary_lpa = _parse_salary_lpa(row.get("salary", ""))
+    if salary_lpa is not None:
+        if salary_lpa > 40:
+            score += 15
+        elif salary_lpa > 27:
+            score += 12
+        elif salary_lpa > 15:
+            score += 8
+        else:
+            score += 3
+    else:
+        score += 8  # Unknown = neutral
+
+    # ── Location (10 pts) ──
+    if any(c in location for c in _TIER1_CITIES):
+        score += 10
+    elif "india" in location:
+        score += 7
+    elif "remote" in location or "hybrid" in location or "wfh" in location:
+        score += 6
+    elif location.strip():
+        score += 3
+    else:
+        score += 5  # Unknown
+
+    # ── Company type (10 pts) ──
+    if company_type in ("b2c", "d2c"):
+        score += 10
+    elif company_type == "b2b":
+        score += 8
+    elif company_type == "mixed":
+        score += 6
+    else:
+        score += 4
+
+    # ── Freshness (5 pts) ──
+    date_posted = str(row.get("date_posted", ""))
+    if date_posted and date_posted.lower() not in ("", "nan", "none"):
+        score += 5
+    else:
+        score += 2
+
+    return min(score, 100)
 
 
 def _compute_shortlist(df: pd.DataFrame) -> pd.Series:

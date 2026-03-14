@@ -62,6 +62,7 @@ def _merge_to_master(
         return stats
 
     new_df = new_df.copy()
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     if master_path.exists():
         try:
@@ -74,9 +75,40 @@ def _merge_to_master(
             new_keys = set(new_df[dedup_key].dropna().tolist())
 
             # New = keys not seen before
-            stats["new"] = len(new_keys - existing_keys)
+            truly_new = new_keys - existing_keys
+            stats["new"] = len(truly_new)
             # Updated = keys that already existed (will be overwritten)
             stats["updated"] = len(new_keys & existing_keys)
+
+            # Mark new rows with first_seen + is_new
+            new_df["is_new"] = new_df[dedup_key].apply(
+                lambda k: "Yes" if k in truly_new else "No"
+            )
+            if "first_seen" not in new_df.columns:
+                new_df["first_seen"] = ""
+            # New items get first_seen = now; returning items keep master's first_seen
+            new_df.loc[new_df["is_new"] == "Yes", "first_seen"] = now_str
+
+            # Preserve first_seen from master for returning items
+            if "first_seen" in master_df.columns:
+                fs_map = dict(zip(
+                    master_df[dedup_key].dropna(),
+                    master_df["first_seen"].fillna(""),
+                ))
+                mask = (new_df["is_new"] == "No") & new_df[dedup_key].notna()
+                new_df.loc[mask, "first_seen"] = new_df.loc[mask, dedup_key].map(
+                    lambda k: fs_map.get(k, "")
+                )
+
+            new_df["last_seen"] = now_str
+
+            # For master rows NOT in this run: mark is_new=No, keep their timestamps
+            if "is_new" not in master_df.columns:
+                master_df["is_new"] = "No"
+            else:
+                master_df["is_new"] = "No"  # Reset all old rows
+            if "last_seen" not in master_df.columns:
+                master_df["last_seen"] = master_df.get("scraped_at", "")
 
             # Concat: new rows go FIRST so they win on drop_duplicates(keep='first')
             combined = pd.concat([new_df, master_df], ignore_index=True)
@@ -86,12 +118,18 @@ def _merge_to_master(
             combined.to_csv(master_path, index=False, encoding="utf-8-sig")
         else:
             # Master exists but is empty or missing the key column
+            new_df["is_new"] = "Yes"
+            new_df["first_seen"] = now_str
+            new_df["last_seen"] = now_str
             new_df.to_csv(master_path, index=False, encoding="utf-8-sig")
             stats["new"] = len(new_df)
             stats["total"] = len(new_df)
     else:
         # First run — create master from scratch
         deduped = new_df.drop_duplicates(subset=[dedup_key], keep="first")
+        deduped["is_new"] = "Yes"
+        deduped["first_seen"] = now_str
+        deduped["last_seen"] = now_str
         deduped.to_csv(master_path, index=False, encoding="utf-8-sig")
         stats["new"] = len(deduped)
         stats["total"] = len(deduped)
@@ -144,7 +182,8 @@ def export_jobs(jobs_df: pd.DataFrame, output_dir: Path = OUTPUT_DIR) -> Path:
         "job_url", "date_posted", "experience",
         "min_experience_years", "max_experience_years",
         "description", "search_keyword", "search_location", "scraped_at",
-        "shortlist",
+        "shortlist", "relevance_score",
+        "is_new", "first_seen", "last_seen",
     ]
     cols = [c for c in priority_cols if c in jobs_df.columns]
     extra = [c for c in jobs_df.columns if c not in cols]

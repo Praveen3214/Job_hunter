@@ -475,7 +475,7 @@
   }
   .btn-query-clear:hover { border-color: var(--danger); color: var(--danger); }
 
-  /* --- Shortlist Star --- */
+  /* --- Application Tracker / Shortlist --- */
   .star-btn {
     cursor: pointer;
     font-size: 18px;
@@ -488,7 +488,68 @@
   .star-btn:hover { color: #f59e0b; opacity: 1; transform: scale(1.2); }
   .star-btn.starred { color: #f59e0b; opacity: 1; }
   td:has(.star-btn) { text-align: center; width: 36px; padding: 6px 4px !important; }
+  td:has(.tracker-btn) { text-align: center; min-width: 90px; padding: 4px !important; }
   .shortlist-count { font-size: 12px; color: #f59e0b; font-weight: 600; margin-left: 6px; }
+
+  .tracker-btn {
+    cursor: pointer;
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    user-select: none;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .tracker-btn:hover { transform: scale(1.05); filter: brightness(1.15); }
+  .tracker-btn.st-none       { background: transparent; border: 1px dashed var(--border); color: var(--text-dim); opacity: 0.5; }
+  .tracker-btn.st-none:hover { opacity: 1; }
+  .tracker-btn.st-interested { background: rgba(245,158,11,0.15); color: #f59e0b; border-color: rgba(245,158,11,0.3); }
+  .tracker-btn.st-applied    { background: rgba(59,130,246,0.15); color: #3b82f6; border-color: rgba(59,130,246,0.3); }
+  .tracker-btn.st-screening  { background: rgba(168,85,247,0.15); color: #a855f7; border-color: rgba(168,85,247,0.3); }
+  .tracker-btn.st-interview  { background: rgba(34,197,94,0.15); color: #22c55e; border-color: rgba(34,197,94,0.3); }
+  .tracker-btn.st-offer      { background: rgba(34,197,94,0.25); color: #16a34a; border-color: rgba(34,197,94,0.4); }
+  .tracker-btn.st-accepted   { background: #16a34a; color: #fff; }
+  .tracker-btn.st-rejected   { background: rgba(239,68,68,0.15); color: #ef4444; border-color: rgba(239,68,68,0.3); }
+
+  /* --- Outreach Modal --- */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 9999; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: auto; }
+  .modal-content {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px; width: 640px; max-width: 90vw;
+    max-height: 80vh; overflow-y: auto; position: relative;
+  }
+  .modal-content h3 { margin: 0 0 16px 0; font-size: 18px; }
+  .modal-close {
+    position: absolute; top: 12px; right: 16px; cursor: pointer;
+    font-size: 22px; color: var(--text-dim); line-height: 1;
+  }
+  .modal-close:hover { color: var(--text); }
+  .outreach-textarea {
+    width: 100%; min-height: 220px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 13px; font-family: inherit;
+    padding: 14px; resize: vertical; line-height: 1.6;
+  }
+  .outreach-textarea:focus { border-color: var(--accent); outline: none; }
+  .outreach-actions { display: flex; gap: 10px; margin-top: 14px; }
+  .outreach-actions button {
+    padding: 8px 18px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); cursor: pointer;
+    font-size: 13px; transition: all 0.15s;
+  }
+  .outreach-actions button:hover { border-color: var(--accent); }
+  .outreach-actions button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .outreach-hint { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
 
   .active-filters {
     display: flex;
@@ -1140,14 +1201,40 @@
             <option value="date_posted-desc">Newest First</option>
             <option value="date_posted-asc">Oldest First</option>
             <option value="platform-asc">Platform (A-Z)</option>
+            <option value="relevance_score-desc">Relevance (High-Low)</option>
+            <option value="relevance_score-asc">Relevance (Low-High)</option>
           </select>
         </div>
         <div class="query-field">
-          <label>Shortlist</label>
+          <label>New / Returning</label>
+          <select id="qIsNew">
+            <option value="">All Jobs</option>
+            <option value="yes">New Only</option>
+            <option value="no">Returning Only</option>
+          </select>
+        </div>
+        <div class="query-field">
+          <label>Min Score</label>
+          <select id="qMinScore">
+            <option value="">Any Score</option>
+            <option value="75">75+ (Excellent)</option>
+            <option value="60">60+ (Good)</option>
+            <option value="45">45+ (Moderate)</option>
+          </select>
+        </div>
+        <div class="query-field">
+          <label>Pipeline Stage</label>
           <select id="qShortlist">
             <option value="">All Items</option>
-            <option value="yes">Shortlisted Only</option>
-            <option value="no">Not Shortlisted</option>
+            <option value="yes">Any Tracked</option>
+            <option value="no">Not Tracked</option>
+            <option value="interested">Interested</option>
+            <option value="applied">Applied</option>
+            <option value="screening">Screening</option>
+            <option value="interview">Interview</option>
+            <option value="offer">Offer</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
       </div>
@@ -1214,6 +1301,28 @@
   </div>
 </div>
 
+<!-- Outreach Email Modal -->
+<div class="modal-overlay" id="outreachModal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeOutreachModal()">&times;</span>
+    <h3 id="outreachTitle">Outreach Email</h3>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-dim)">Template:</label>
+      <select id="outreachTemplate" onchange="regenerateOutreach()" style="margin-left:8px;padding:4px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px">
+        <option value="cold">Cold Email (Direct)</option>
+        <option value="referral">Referral Request</option>
+        <option value="linkedin">LinkedIn Message</option>
+      </select>
+    </div>
+    <textarea class="outreach-textarea" id="outreachBody"></textarea>
+    <div class="outreach-actions">
+      <button class="primary" onclick="copyOutreach()">Copy to Clipboard</button>
+      <button onclick="closeOutreachModal()">Close</button>
+    </div>
+    <p class="outreach-hint">Edit the template as needed, then copy. Right-click the title link to open the job posting.</p>
+  </div>
+</div>
+
 <script>
 // ===================== STATE =====================
 const state = {
@@ -1240,17 +1349,34 @@ const state = {
   qRoleType: '',
   qSortBy: '',
   qShortlist: '',
+  qIsNew: '',
+  qMinScore: '',
   // Shortlist state — keys are "tab:uniqueKey", values are true
   shortlisted: {},
 };
 
-// ===================== SHORTLIST =====================
+// ===================== APPLICATION TRACKER =====================
 const SHORTLIST_KEY = 'jobhunter_shortlist';
+
+// Pipeline stages: click cycles through these
+const TRACKER_STAGES = ['none', 'interested', 'applied', 'screening', 'interview', 'offer', 'accepted', 'rejected'];
+const TRACKER_LABELS = {
+  none: '+', interested: '\u2605 Interested', applied: 'Applied',
+  screening: 'Screening', interview: 'Interview', offer: 'Offer!',
+  accepted: 'Accepted', rejected: 'Rejected',
+};
 
 function loadShortlist() {
   try {
     const raw = localStorage.getItem(SHORTLIST_KEY);
-    if (raw) state.shortlisted = JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Migrate old boolean shortlist → new stage format
+      Object.keys(parsed).forEach(k => {
+        if (parsed[k] === true) parsed[k] = 'interested';
+      });
+      state.shortlisted = parsed;
+    }
   } catch (e) { state.shortlisted = {}; }
 }
 
@@ -1268,29 +1394,40 @@ function getRowKey(tab, row) {
   return JSON.stringify(row).slice(0, 120);
 }
 
-function isShortlisted(tab, row) {
+function getTrackerStage(tab, row) {
   const key = tab + ':' + getRowKey(tab, row);
-  return state.shortlisted[key] === true;
+  return state.shortlisted[key] || 'none';
 }
 
-function toggleShortlist(pageIndex) {
+function isShortlisted(tab, row) {
+  return getTrackerStage(tab, row) !== 'none';
+}
+
+function cycleTracker(pageIndex, direction) {
+  // direction: 1 = forward, -1 = backward (right-click)
   const config = TAB_CONFIG[state.activeTab];
   const data = getFilteredData();
   const start = (state.page - 1) * state.perPage;
   const row = data[start + pageIndex];
   if (!row) return;
   const key = state.activeTab + ':' + getRowKey(state.activeTab, row);
-  if (state.shortlisted[key]) {
+  const current = state.shortlisted[key] || 'none';
+  const idx = TRACKER_STAGES.indexOf(current);
+  const nextIdx = (idx + direction + TRACKER_STAGES.length) % TRACKER_STAGES.length;
+  const next = TRACKER_STAGES[nextIdx];
+  if (next === 'none') {
     delete state.shortlisted[key];
   } else {
-    state.shortlisted[key] = true;
+    state.shortlisted[key] = next;
   }
   saveShortlist();
   renderTable();
 }
 
+// Legacy compat
+function toggleShortlist(pageIndex) { cycleTracker(pageIndex, 1); }
+
 function clearShortlist() {
-  // Clear only current tab's shortlisted items
   const prefix = state.activeTab + ':';
   Object.keys(state.shortlisted).forEach(k => {
     if (k.startsWith(prefix)) delete state.shortlisted[k];
@@ -1304,7 +1441,20 @@ function getShortlistCount(tab) {
   return Object.keys(state.shortlisted).filter(k => k.startsWith(prefix)).length;
 }
 
+function trackerCell(val, row, pageIdx) {
+  const stage = getTrackerStage(state.activeTab, row);
+  const label = TRACKER_LABELS[stage] || '+';
+  const cssClass = 'st-' + stage;
+  return '<span class="tracker-btn ' + cssClass + '" '
+    + 'onclick="event.stopPropagation();cycleTracker(' + pageIdx + ',1)" '
+    + 'oncontextmenu="event.preventDefault();event.stopPropagation();cycleTracker(' + pageIdx + ',-1)" '
+    + 'title="Click: next stage | Right-click: previous stage">'
+    + label + '</span>';
+}
+
+// Backward compat: starCell for non-jobs tabs (simpler binary)
 function starCell(val, row, pageIdx) {
+  if (state.activeTab === 'jobs') return trackerCell(val, row, pageIdx);
   const starred = isShortlisted(state.activeTab, row);
   return '<span class="star-btn ' + (starred ? 'starred' : '') + '" '
     + 'onclick="event.stopPropagation();toggleShortlist(' + pageIdx + ')" '
@@ -1329,6 +1479,8 @@ const TAB_CONFIG = {
       { key: 'salary', label: 'Salary', render: salaryDisplay },
       { key: 'experience_required', label: 'Exp. Req.' },
       { key: 'date_posted', label: 'Posted' },
+      { key: 'relevance_score', label: 'Score', render: scoreBadge },
+      { key: 'is_new', label: 'New', render: newBadge },
       { key: 'role_summary', label: 'Summary', render: summaryCell },
     ],
     dataKey: 'jobs',
@@ -1355,6 +1507,7 @@ const TAB_CONFIG = {
       { key: 'linkedin_url', label: 'LinkedIn', render: linkedinLink },
       { key: 'email', label: 'Email', render: emailDisplay },
       { key: 'email_confidence', label: 'Confidence', render: confidenceBar },
+      { key: '_outreach', label: 'Outreach', render: outreachBtn },
     ],
     dataKey: 'hr',
   },
@@ -1374,6 +1527,7 @@ const TAB_CONFIG = {
       { key: 'company_industry', label: 'Industry' },
       { key: 'company_size', label: 'Size' },
       { key: 'search_keyword', label: 'Keyword' },
+      { key: '_outreach', label: 'Outreach', render: outreachBtn },
     ],
     dataKey: 'hiring',
   },
@@ -1393,6 +1547,7 @@ const TAB_CONFIG = {
       { key: 'domains_served', label: 'Domains' },
       { key: 'company_industry', label: 'Industry' },
       { key: 'search_keyword', label: 'Keyword' },
+      { key: '_outreach', label: 'Outreach', render: outreachBtn },
     ],
     dataKey: 'consultants',
   },
@@ -1409,6 +1564,7 @@ const TAB_CONFIG = {
       { key: 'post_text', label: 'Post', render: summaryCell },
       { key: 'post_url', label: 'Post Link', render: websiteLink },
       { key: 'search_keyword', label: 'Keyword' },
+      { key: '_outreach', label: 'Outreach', render: outreachBtn },
     ],
     dataKey: 'firmposts',
   },
@@ -1489,6 +1645,26 @@ function confidenceBar(val) {
 function salaryDisplay(val) {
   if (!val || val === 'nan' || val === 'NaN') return '<span style="color:var(--text-dim)">-</span>';
   return esc(String(val));
+}
+
+function scoreBadge(val) {
+  const n = parseInt(val);
+  if (isNaN(n) || n <= 0) return '<span style="color:var(--text-dim)">-</span>';
+  const color = n >= 75 ? 'var(--success)' : n >= 55 ? '#f59e0b' : n >= 35 ? 'var(--text-dim)' : 'var(--danger)';
+  return `<span style="display:inline-flex;align-items:center;gap:4px"><span class="confidence-bar" style="width:50px"><span class="fill" style="width:${n}%;background:${color}"></span></span><span style="color:${color};font-weight:600;font-size:12px">${n}</span></span>`;
+}
+
+function newBadge(val) {
+  if (val === 'Yes' || val === 'yes' || val === true) {
+    return '<span style="display:inline-block;background:#22c55e;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600">NEW</span>';
+  }
+  return '';
+}
+
+function outreachBtn(val, row, pageIdx) {
+  return '<span style="cursor:pointer;padding:2px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:11px;white-space:nowrap" '
+    + 'onclick="event.stopPropagation();openOutreach(' + pageIdx + ')" '
+    + 'title="Generate outreach template">&#9993; Reach</span>';
 }
 
 function boolBadge(val) {
@@ -1794,6 +1970,8 @@ function runQuery() {
   state.qRoleType = document.getElementById('qRoleType').value;
   state.qSortBy = document.getElementById('qSortBy').value;
   state.qShortlist = document.getElementById('qShortlist').value;
+  state.qIsNew = document.getElementById('qIsNew').value;
+  state.qMinScore = document.getElementById('qMinScore').value;
 
   // Apply sort
   if (state.qSortBy) {
@@ -1826,6 +2004,8 @@ function clearQuery() {
   document.getElementById('qRoleType').value = '';
   document.getElementById('qSortBy').value = '';
   document.getElementById('qShortlist').value = '';
+  document.getElementById('qIsNew').value = '';
+  document.getElementById('qMinScore').value = '';
   state.qRole = '';
   state.qCompany = '';
   state.qPlatform = '';
@@ -1837,6 +2017,8 @@ function clearQuery() {
   state.qRoleType = '';
   state.qSortBy = '';
   state.qShortlist = '';
+  state.qIsNew = '';
+  state.qMinScore = '';
   state.sortCol = null;
   state.sortAsc = true;
   state.page = 1;
@@ -1864,7 +2046,9 @@ function updateFilterChips() {
     { id: 'qCompanyType', label: 'Co. Type', value: state.qCompanyType },
     { id: 'qRoleType', label: 'Role Type', value: state.qRoleType },
     { id: 'qSortBy', label: 'Sort', value: state.qSortBy ? state.qSortBy.replace('-', ' ') : '' },
-    { id: 'qShortlist', label: 'Shortlist', value: state.qShortlist === 'yes' ? 'Shortlisted Only' : state.qShortlist === 'no' ? 'Not Shortlisted' : '' },
+    { id: 'qShortlist', label: 'Stage', value: state.qShortlist === 'yes' ? 'Any Tracked' : state.qShortlist === 'no' ? 'Not Tracked' : (TRACKER_LABELS[state.qShortlist] || '') },
+    { id: 'qIsNew', label: 'New', value: state.qIsNew === 'yes' ? 'New Only' : state.qIsNew === 'no' ? 'Returning' : '' },
+    { id: 'qMinScore', label: 'Min Score', value: state.qMinScore ? state.qMinScore + '+' : '' },
   ];
 
   fields.forEach(f => {
@@ -1955,11 +2139,26 @@ function getFilteredData() {
     data = data.filter(row => String(row.role_type || '').toUpperCase() === state.qRoleType.toUpperCase());
   }
 
-  // Shortlist filter
+  // New / Returning filter
+  if (state.qIsNew === 'yes') {
+    data = data.filter(row => String(row.is_new || '').toLowerCase() === 'yes');
+  } else if (state.qIsNew === 'no') {
+    data = data.filter(row => String(row.is_new || '').toLowerCase() !== 'yes');
+  }
+
+  // Min relevance score filter
+  if (state.qMinScore) {
+    const minScore = parseInt(state.qMinScore);
+    data = data.filter(row => parseInt(row.relevance_score || 0) >= minScore);
+  }
+
+  // Pipeline stage / shortlist filter
   if (state.qShortlist === 'yes') {
     data = data.filter(row => isShortlisted(state.activeTab, row));
   } else if (state.qShortlist === 'no') {
     data = data.filter(row => !isShortlisted(state.activeTab, row));
+  } else if (state.qShortlist && TRACKER_STAGES.includes(state.qShortlist)) {
+    data = data.filter(row => getTrackerStage(state.activeTab, row) === state.qShortlist);
   }
 
   // Sort
@@ -1976,7 +2175,7 @@ function getFilteredData() {
 
   // Update result count in query panel
   const totalInTab = state[config.dataKey].length;
-  const hasAnyFilter = state.qRole || state.qCompany || state.qPlatform || state.qLocation || state.qSalary || state.qExperience || state.qWorkType || state.qCompanyType || state.qRoleType || state.qShortlist;
+  const hasAnyFilter = state.qRole || state.qCompany || state.qPlatform || state.qLocation || state.qSalary || state.qExperience || state.qWorkType || state.qCompanyType || state.qRoleType || state.qShortlist || state.qIsNew || state.qMinScore;
   const countEl = document.getElementById('queryResultCount');
   if (hasAnyFilter) {
     countEl.innerHTML = `<strong>${data.length}</strong> of ${totalInTab} matched`;
@@ -2059,7 +2258,7 @@ function exportCurrentView() {
 
   // Skip the _star column, add a 'shortlisted' column instead
   const exportCols = config.columns.filter(c => c.key !== '_star');
-  const headers = [...exportCols.map(c => c.key), 'shortlisted'];
+  const headers = [...exportCols.map(c => c.key), 'pipeline_stage'];
   const rows = data.map(row => {
     const vals = exportCols.map(col => {
       const v = row[col.key];
@@ -2067,7 +2266,8 @@ function exportCurrentView() {
       const s = String(v);
       return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
     });
-    vals.push(isShortlisted(state.activeTab, row) ? 'Yes' : '');
+    const stage = getTrackerStage(state.activeTab, row);
+    vals.push(stage !== 'none' ? stage : '');
     return vals.join(',');
   });
 
@@ -2351,6 +2551,93 @@ function toggleCategory(id) {
 
 // Initialize platform summary on load
 updatePlatformSummary();
+
+// ===================== OUTREACH TEMPLATE GENERATOR =====================
+let _outreachRow = null;
+
+const OUTREACH_TEMPLATES = {
+  cold: function(r) {
+    const name = r.hr_name || r.name || 'there';
+    const firstName = name.split(' ')[0];
+    const company = r.company || 'your company';
+    const title = r.hr_title || r.title || '';
+    const jobTitle = r.hiring_for_role || '';
+    const subject = `Interest in ${jobTitle || 'Marketing Leadership'} opportunities at ${company}`;
+
+    return `Subject: ${subject}\n\nHi ${firstName},\n\nI came across ${company}'s profile while researching senior marketing leadership opportunities in India, and I'd love to connect.\n\nI'm a seasoned marketing professional with deep experience in growth strategy, brand building, and digital transformation across consumer and B2B domains. I've led teams of 20+ and driven measurable revenue impact through data-driven campaigns and strategic partnerships.\n\n${jobTitle ? `I noticed a ${jobTitle} opening and believe my background aligns well with what you're looking for.` : `If ${company} is looking to strengthen its marketing leadership, I'd welcome a conversation.`}\n\nWould you have 15 minutes this week for a quick chat? Happy to share my portfolio and references.\n\nBest regards,\n[Your Name]\n[Your Phone]\n[Your LinkedIn]`;
+  },
+
+  referral: function(r) {
+    const name = r.hr_name || r.name || 'there';
+    const firstName = name.split(' ')[0];
+    const company = r.company || 'your company';
+    const title = r.hr_title || r.title || '';
+    const jobTitle = r.hiring_for_role || '';
+
+    return `Subject: Referral inquiry — Marketing Leadership at ${company}\n\nHi ${firstName},\n\nI hope this finds you well. I was referred to you by a mutual connection who mentioned ${company} is building out its marketing leadership team.\n\nI'm currently exploring senior marketing roles (Director / VP / Head of Marketing) and have ${company} high on my list — I'm impressed by the company's trajectory and growth story.\n\nMy background spans:\n• Growth & performance marketing at scale\n• Brand strategy & positioning for consumer brands\n• Team building — hired and led marketing teams of 15-25\n• P&L ownership with demonstrated revenue impact\n\n${jobTitle ? `I'm particularly interested in the ${jobTitle} role.` : `I'd love to learn about any upcoming marketing leadership needs.`}\n\nWould you be open to a brief call to discuss if there's a fit? I can share my detailed profile upfront.\n\nWarm regards,\n[Your Name]\n[Your Phone]\n[Your LinkedIn]`;
+  },
+
+  linkedin: function(r) {
+    const name = r.hr_name || r.name || 'there';
+    const firstName = name.split(' ')[0];
+    const company = r.company || 'your company';
+    const jobTitle = r.hiring_for_role || '';
+
+    return `Hi ${firstName},\n\nI'm a marketing leader exploring Director/VP-level opportunities and noticed ${company}${jobTitle ? "'s " + jobTitle + " opening" : "'s impressive growth"}.\n\nWith 10+ years in growth marketing, brand strategy, and team leadership, I'd love to connect and explore if there's a mutual fit.\n\nHappy to share my profile — would you be open to a quick chat?\n\nBest,\n[Your Name]`;
+  },
+};
+
+function openOutreach(pageIndex) {
+  const config = TAB_CONFIG[state.activeTab];
+  const data = getFilteredData();
+  const start = (state.page - 1) * state.perPage;
+  const row = data[start + pageIndex];
+  if (!row) return;
+
+  _outreachRow = row;
+  const name = row.hr_name || row.name || 'Contact';
+  const company = row.company || '';
+  document.getElementById('outreachTitle').textContent = `Outreach to ${name}` + (company ? ` @ ${company}` : '');
+  document.getElementById('outreachTemplate').value = 'cold';
+  regenerateOutreach();
+  document.getElementById('outreachModal').classList.add('show');
+}
+
+function regenerateOutreach() {
+  if (!_outreachRow) return;
+  const template = document.getElementById('outreachTemplate').value;
+  const fn = OUTREACH_TEMPLATES[template];
+  if (fn) {
+    document.getElementById('outreachBody').value = fn(_outreachRow);
+  }
+}
+
+function copyOutreach() {
+  const textarea = document.getElementById('outreachBody');
+  textarea.select();
+  navigator.clipboard.writeText(textarea.value).then(() => {
+    const btn = document.querySelector('#outreachModal .outreach-actions .primary');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.background = 'var(--success)';
+    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 1500);
+  });
+}
+
+function closeOutreachModal() {
+  document.getElementById('outreachModal').classList.remove('show');
+  _outreachRow = null;
+}
+
+// Close modal on outside click
+document.getElementById('outreachModal').addEventListener('click', function(e) {
+  if (e.target === this) closeOutreachModal();
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeOutreachModal();
+});
 
 // ===================== KEYBOARD SHORTCUTS =====================
 // Enter key on text inputs triggers Run Query
