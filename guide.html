@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Hunter - User Guide</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d2e;
+    --surface2: #232640;
+    --border: #2d3154;
+    --text: #e2e4f0;
+    --text-dim: #8b8fa8;
+    --accent: #7c5cfc;
+    --accent-glow: rgba(124, 92, 252, 0.15);
+    --green: #22c55e;
+    --blue: #3b82f6;
+    --purple: #7c3aed;
+    --teal: #0d9488;
+    --orange: #f59e0b;
+    --red: #ef4444;
+    --code-bg: #161929;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background: linear-gradient(135deg, #1a1040 0%, #0f1117 50%, #0a1628 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 0 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -20%;
+    width: 140%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 50%, rgba(124,92,252,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(13,148,136,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero h1 {
+    font-size: 2.6rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    position: relative;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    color: var(--text-dim);
+    font-size: 1.15rem;
+    margin-top: 12px;
+    position: relative;
+  }
+  .hero .version {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-top: 16px;
+    position: relative;
+  }
+
+  /* ---------- Nav ---------- */
+  .toc {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(15, 17, 23, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    overflow-x: auto;
+  }
+  .toc-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0;
+  }
+  .toc a {
+    display: block;
+    padding: 14px 14px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .toc a:hover {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  /* ---------- Container ---------- */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* ---------- Section ---------- */
+  section {
+    margin-top: 56px;
+  }
+  section h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  section h2 .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  section > p {
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 28px 0 10px;
+    color: var(--text);
+  }
+
+  /* ---------- Cards ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin: 16px 0;
+  }
+  .card.highlight {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, var(--accent-glow), var(--surface) 60%);
+  }
+  .card h4 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+  .card p, .card li {
+    color: var(--text-dim);
+    font-size: 0.92rem;
+  }
+
+  /* ---------- Code ---------- */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 12px 0;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    position: relative;
+  }
+  pre code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    color: #c4c8e0;
+  }
+  code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    background: var(--code-bg);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    color: #d4b8ff;
+  }
+  .cmd { color: var(--green); }
+  .flag { color: var(--orange); }
+  .val { color: #7dd3fc; }
+  .comment { color: #6b7094; font-style: italic; }
+
+  /* ---------- Grid ---------- */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+  @media (max-width: 640px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Platform badges ---------- */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge.linkedin { background: #0a66c2; color: #fff; }
+  .badge.indeed { background: var(--purple); color: #fff; }
+  .badge.naukri { background: var(--teal); color: #fff; }
+  .badge.cutshort { background: #e85d04; color: #fff; }
+  .badge.instahyre { background: #2563eb; color: #fff; }
+  .badge.wellfound { background: #374151; color: #fff; }
+  .badge.iimjobs { background: #d97706; color: #000; }
+  .badge.hirist { background: var(--purple); color: #fff; }
+  .badge.weekday { background: #059669; color: #fff; }
+  .badge.hunter { background: var(--orange); color: #000; }
+
+  /* ---------- Table ---------- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.9rem;
+  }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--surface2);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  tr:hover td { background: rgba(124,92,252,0.04); }
+
+  /* ---------- Lists ---------- */
+  ul, ol {
+    padding-left: 24px;
+    margin: 10px 0;
+  }
+  li {
+    margin: 6px 0;
+    color: var(--text-dim);
+    font-size: 0.92rem;
+  }
+  li strong { color: var(--text); }
+
+  /* ---------- Callouts ---------- */
+  .callout {
+    display: flex;
+    gap: 14px;
+    padding: 16px 20px;
+    border-radius: var(--radius);
+    margin: 16px 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    border: 1px solid;
+  }
+  .callout .icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+  .callout.tip {
+    background: rgba(34,197,94,0.06);
+    border-color: rgba(34,197,94,0.25);
+    color: #a3e6b8;
+  }
+  .callout.warn {
+    background: rgba(245,158,11,0.06);
+    border-color: rgba(245,158,11,0.25);
+    color: #fcd88e;
+  }
+  .callout.info {
+    background: rgba(59,130,246,0.06);
+    border-color: rgba(59,130,246,0.25);
+    color: #93c5fd;
+  }
+  .callout.danger {
+    background: rgba(239,68,68,0.06);
+    border-color: rgba(239,68,68,0.25);
+    color: #fca5a5;
+  }
+
+  /* ---------- Flow diagram ---------- */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+    justify-content: center;
+  }
+  .flow-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 120px;
+  }
+  .flow-step.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+  .flow-arrow {
+    color: var(--text-dim);
+    font-size: 1.2rem;
+  }
+
+  /* ---------- Architecture diagram ---------- */
+  .arch-diagram {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre;
+    color: #8b8fa8;
+    margin: 16px 0;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .tag.required { background: rgba(239,68,68,0.15); color: #fca5a5; }
+  .tag.optional { background: rgba(59,130,246,0.15); color: #93c5fd; }
+  .tag.free { background: rgba(34,197,94,0.15); color: #86efac; }
+  .tag.new { background: rgba(124,92,252,0.2); color: #c4b5fd; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+    font-size: 0.82rem;
+    border-top: 1px solid var(--border);
+    margin-top: 60px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  /* ---------- Scroll ---------- */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* smooth scroll */
+  html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+
+<!-- ==================== HERO ==================== -->
+<div class="hero">
+  <h1><span>Job Hunter</span> User Guide</h1>
+  <p>Scrape jobs across 9 platforms, find who's hiring, discover recruiters &amp; HR contacts</p>
+  <div class="version">v3.0 &middot; 9 Platforms + Hiring Signals + Consultant Finder + Dashboard</div>
+</div>
+
+<!-- ==================== NAV ==================== -->
+<nav class="toc">
+  <div class="toc-inner">
+    <a href="#tasks">What Can I Do?</a>
+    <a href="#overview">Overview</a>
+    <a href="#setup">Setup</a>
+    <a href="#scraping">Scraping</a>
+    <a href="#hiring">Hiring Signals</a>
+    <a href="#consultants">Consultants</a>
+    <a href="#hr">HR Contacts</a>
+    <a href="#emails">Emails</a>
+    <a href="#dashboard">Dashboard</a>
+    <a href="#advanced">Advanced</a>
+    <a href="#troubleshooting">Troubleshooting</a>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- ==================== TASKS & OUTCOMES ==================== -->
+<section id="tasks">
+  <h2><span class="step-num">0</span> What Can I Do?</h2>
+  <p>Every task you can perform with Job Hunter and what you'll get from it.</p>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th>Task</th><th>How to Run</th><th>Output</th><th>What You Get</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1</strong></td>
+        <td><strong>Scrape job listings</strong></td>
+        <td><code>python main.py</code></td>
+        <td><code>jobs_*.csv</code></td>
+        <td>Job titles, companies, locations, salaries, URLs, posting dates across up to 9 platforms. Auto-enriched with company type (B2B/B2C/D2C), role type, experience range, and a role summary.</td>
+      </tr>
+      <tr>
+        <td><strong>2</strong></td>
+        <td><strong>Find people actively hiring</strong> <span class="tag new">New</span></td>
+        <td><code>python main.py --find-hiring</code></td>
+        <td><code>hiring_signals_*.csv</code></td>
+        <td>LinkedIn profiles with the #Hiring badge who match your keywords. Includes name, title, company, email (if visible), company details, and what role category they're hiring for (Marketing, Sales, Engineering, etc.).</td>
+      </tr>
+      <tr>
+        <td><strong>3</strong></td>
+        <td><strong>Scan hiring posts</strong> <span class="tag new">New</span></td>
+        <td><code>python main.py --find-posts</code></td>
+        <td><code>hiring_signals_*.csv</code></td>
+        <td>LinkedIn posts containing hiring hashtags (#hiring, #wearehiring, #jobalert, etc.). Extracts author name, title, company, post text, and classifies what role they're hiring for.</td>
+      </tr>
+      <tr>
+        <td><strong>4</strong></td>
+        <td><strong>Find recruitment consultants (focused)</strong> <span class="tag new">New</span></td>
+        <td><code>python main.py --find-consultants</code></td>
+        <td><code>consultants_*.csv</code></td>
+        <td>Recruitment consultants, staffing firms, and headhunters who recruit for your specific role keywords. Classified by type (Executive Search, Agency, Staffing Firm, HR Consultancy), flagged as agency vs in-house, with domains they serve.</td>
+      </tr>
+      <tr>
+        <td><strong>5</strong></td>
+        <td><strong>Find ALL recruiters in your area</strong> <span class="tag new">New</span></td>
+        <td><code>python main.py --consultants-broad</code></td>
+        <td><code>consultants_*.csv</code></td>
+        <td>Generic recruiter list: all recruitment consultants, staffing managers, headhunters in your target locations. Not tied to any specific role keyword. Great for building a master recruiter contact database.</td>
+      </tr>
+      <tr>
+        <td><strong>6</strong></td>
+        <td><strong>Find HR contacts at companies</strong></td>
+        <td><code>python main.py --find-hr</code></td>
+        <td><code>hr_contacts_*.csv</code></td>
+        <td>HR/Recruiter/TA profiles at companies from your job results. Searches LinkedIn for "HR OR Recruiter OR Talent Acquisition" at each company. Returns name, title, LinkedIn URL.</td>
+      </tr>
+      <tr>
+        <td><strong>7</strong></td>
+        <td><strong>Enrich with email addresses</strong></td>
+        <td><code>python main.py --enrich-emails</code></td>
+        <td><code>hr_contacts_*.csv</code></td>
+        <td>Uses Hunter.io to find email addresses for HR contacts. Returns email + confidence score (0-100%). Free tier: 50 lookups/month.</td>
+      </tr>
+      <tr>
+        <td><strong>8</strong></td>
+        <td><strong>Browse results in dashboard</strong></td>
+        <td><code>python serve_dashboard.py</code></td>
+        <td>Web UI at <code>:8056</code></td>
+        <td>Visual dashboard with data tables, query builder (filter by role, location, platform, salary, company type), scrape builder (run scrapes from browser), export filtered results as CSV.</td>
+      </tr>
+      <tr>
+        <td><strong>9</strong></td>
+        <td><strong>Query saved data (CLI)</strong></td>
+        <td><code>python query.py</code></td>
+        <td>Terminal output</td>
+        <td>Interactive CLI to filter previously scraped jobs by role, location, platform, salary, work type. No re-scraping needed.</td>
+      </tr>
+      <tr>
+        <td><strong>10</strong></td>
+        <td><strong>Full pipeline (everything)</strong></td>
+        <td><code>python main.py --find-hiring --find-posts --find-consultants --find-hr --enrich-emails --dashboard</code></td>
+        <td>All CSVs + Dashboard</td>
+        <td>Scrapes 9 platforms, finds #Hiring profiles, scans hiring posts, discovers recruiters, finds HR contacts, enriches emails, opens the dashboard. The complete package.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Output Files Reference</h3>
+  <table>
+    <thead>
+      <tr><th>File Pattern</th><th>Generated By</th><th>Key Columns</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>jobs_*.csv</code></td>
+        <td>Default scraping</td>
+        <td>platform, title, company, location, salary, job_url, date_posted, experience, company_type, role_type, role_summary</td>
+      </tr>
+      <tr>
+        <td><code>hiring_signals_*.csv</code></td>
+        <td><code>--find-hiring</code> / <code>--find-posts</code></td>
+        <td>name, title, company, linkedin_url, email, hiring_for_role, signal_source, post_text, post_url</td>
+      </tr>
+      <tr>
+        <td><code>consultants_*.csv</code></td>
+        <td><code>--find-consultants</code> / <code>--consultants-broad</code></td>
+        <td>name, title, company, linkedin_url, email, consultant_type, is_agency, domains_served</td>
+      </tr>
+      <tr>
+        <td><code>hr_contacts_*.csv</code></td>
+        <td><code>--find-hr</code></td>
+        <td>company, hr_name, hr_title, linkedin_url, email, email_confidence</td>
+      </tr>
+      <tr>
+        <td><code>summary_*.csv</code></td>
+        <td>Default (with jobs)</td>
+        <td>company, total_openings, roles, platforms, hr_contacts_found, emails_found</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ==================== OVERVIEW ==================== -->
+<section id="overview">
+  <h2><span class="step-num">1</span> Overview</h2>
+  <p>Job Hunter is a multi-platform job scraping toolkit that also finds who's actively hiring, discovers recruitment consultants, locates HR contacts, and enriches everything with emails.</p>
+
+  <div class="flow">
+    <div class="flow-step active">Scrape Jobs<br><small>9 platforms</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step">Hiring Signals<br><small>#Hiring + Posts</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step">Consultants<br><small>Recruiters/Agencies</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step">HR Contacts<br><small>at companies</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step">Enrich Emails<br><small>Hunter.io</small></div>
+  </div>
+
+  <h3>Supported Platforms (9)</h3>
+  <table>
+    <thead>
+      <tr><th>Platform</th><th>Method</th><th>Login?</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="badge linkedin">LinkedIn</span></td><td>python-jobspy (guest API)</td><td>No</td><td>Rate-limited; no login needed for jobs</td></tr>
+      <tr><td><span class="badge indeed">Indeed</span></td><td>python-jobspy</td><td>No</td><td>Country auto-detected</td></tr>
+      <tr><td><span class="badge naukri">Naukri</span></td><td>Playwright browser</td><td>No</td><td>India-focused, min experience filter</td></tr>
+      <tr><td><span class="badge cutshort">Cutshort</span></td><td>HTTP + SSR parsing</td><td>No</td><td>Fast, no browser needed</td></tr>
+      <tr><td><span class="badge instahyre">Instahyre</span></td><td>Playwright browser</td><td>No</td><td>India startup ecosystem</td></tr>
+      <tr><td><span class="badge wellfound">Wellfound</span></td><td>Playwright + login</td><td><strong>Yes</strong></td><td>Free account required (set in .env)</td></tr>
+      <tr><td><span class="badge iimjobs">IIMJobs</span></td><td>Playwright browser</td><td>No</td><td>Premium/MBA-level roles</td></tr>
+      <tr><td><span class="badge hirist">Hirist</span></td><td>Playwright browser</td><td>No</td><td>Tech &amp; premium roles (by IIMJobs)</td></tr>
+      <tr><td><span class="badge weekday">Weekday</span></td><td>HTTP + SSR parsing</td><td>No</td><td>Fast, Playwright fallback if needed</td></tr>
+    </tbody>
+  </table>
+
+  <h3>LinkedIn-Powered Features</h3>
+  <p>These features use Playwright with a persistent Chrome profile to search LinkedIn. First run requires a one-time manual login.</p>
+  <table>
+    <thead>
+      <tr><th>Feature</th><th>Flag</th><th>What It Searches</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Hiring Signals (People)</strong></td><td><code>--find-hiring</code></td><td>LinkedIn People search for profiles with #Hiring badge</td></tr>
+      <tr><td><strong>Hiring Signals (Posts)</strong></td><td><code>--find-posts</code></td><td>LinkedIn Content search for posts with hiring hashtags</td></tr>
+      <tr><td><strong>Consultants (Focused)</strong></td><td><code>--find-consultants</code></td><td>LinkedIn People search: recruiter titles + your keywords</td></tr>
+      <tr><td><strong>Consultants (Broad)</strong></td><td><code>--consultants-broad</code></td><td>LinkedIn People search: recruiter titles + locations only</td></tr>
+      <tr><td><strong>HR Contacts</strong></td><td><code>--find-hr</code></td><td>LinkedIn People search for HR/TA at companies from job results</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ==================== SETUP ==================== -->
+<section id="setup">
+  <h2><span class="step-num">2</span> Setup &amp; Installation</h2>
+  <p>One-time setup to get dependencies installed and configured.</p>
+
+  <h3>2.1 &mdash; Install Python Dependencies</h3>
+  <pre><code><span class="cmd">cd</span> job_hunter
+<span class="cmd">python -m venv</span> venv
+<span class="cmd">venv\Scripts\activate</span>       <span class="comment"># Windows</span>
+<span class="cmd">source</span> venv/bin/activate     <span class="comment"># macOS/Linux</span>
+<span class="cmd">pip install</span> <span class="flag">-r</span> requirements.txt</code></pre>
+
+  <h3>2.2 &mdash; Install Playwright Browsers</h3>
+  <p>Required for Naukri, Instahyre, Wellfound, IIMJobs, Hirist, and all LinkedIn-based features.</p>
+  <pre><code><span class="cmd">playwright install</span> chromium</code></pre>
+
+  <h3>2.3 &mdash; Configure Environment</h3>
+  <pre><code><span class="cmd">cp</span> .env.example .env
+<span class="comment"># Edit .env and set:</span>
+<span class="comment">#   HUNTER_API_KEY=your_key_here        (optional, for email enrichment)</span>
+<span class="comment">#   WELLFOUND_EMAIL=you@example.com     (optional, for Wellfound)</span>
+<span class="comment">#   WELLFOUND_PASSWORD=your_password    (optional, for Wellfound)</span></code></pre>
+
+  <div class="callout tip">
+    <span class="icon">&#9889;</span>
+    <div><strong>Hunter.io free tier</strong> gives 50 email lookups/month. Sign up at <code>hunter.io</code> &mdash; no credit card. This is optional; the tool works without it.</div>
+  </div>
+</section>
+
+<!-- ==================== SCRAPING ==================== -->
+<section id="scraping">
+  <h2><span class="step-num">3</span> Scraping Jobs</h2>
+  <p>Search for job listings across 9 platforms with custom keywords, locations, and filters.</p>
+
+  <div class="card highlight">
+    <h4>One-command search (all platforms, default keywords)</h4>
+    <pre><code><span class="cmd">python</span> main.py</code></pre>
+    <p>Searches all 9 platforms for 12 senior marketing titles across 7 locations. Results go to <code>output/</code>.</p>
+  </div>
+
+  <h3>3.1 &mdash; Custom Keywords &amp; Locations</h3>
+  <pre><code><span class="cmd">python</span> main.py <span class="flag">-k</span> <span class="val">"CMO, Marketing Director, Brand Head"</span> <span class="flag">-l</span> <span class="val">"Bangalore, Mumbai"</span></code></pre>
+
+  <h3>3.2 &mdash; Choose Platforms</h3>
+  <pre><code><span class="comment"># Only LinkedIn + Naukri</span>
+<span class="cmd">python</span> main.py <span class="flag">-p</span> <span class="val">linkedin,naukri</span>
+
+<span class="comment"># All platforms (default)</span>
+<span class="cmd">python</span> main.py <span class="flag">-p</span> <span class="val">all</span></code></pre>
+  <p>Available: <code>linkedin</code>, <code>indeed</code>, <code>naukri</code>, <code>cutshort</code>, <code>instahyre</code>, <code>wellfound</code>, <code>iimjobs</code>, <code>hirist</code>, <code>weekday</code></p>
+
+  <h3>3.3 &mdash; Result Volume &amp; Date Filters</h3>
+  <pre><code><span class="comment"># Max 25 results per platform, only last 3 days</span>
+<span class="cmd">python</span> main.py <span class="flag">-n</span> <span class="val">25</span> <span class="flag">--hours-old</span> <span class="val">72</span></code></pre>
+
+  <h3>3.4 &mdash; Enrichment Columns</h3>
+  <p>Every scraped job is automatically enriched with:</p>
+  <table>
+    <thead><tr><th>Column</th><th>Values</th><th>How</th></tr></thead>
+    <tbody>
+      <tr><td><code>company_type</code></td><td>B2B, B2C, D2C, Mixed, Unknown</td><td>Keyword analysis of title + description + company name</td></tr>
+      <tr><td><code>role_type</code></td><td>B2B, B2C, D2C, Growth, Brand, General</td><td>Title + description signal detection</td></tr>
+      <tr><td><code>experience_required</code></td><td>e.g. "10-15 years"</td><td>Extracted from experience field or description text</td></tr>
+      <tr><td><code>role_summary</code></td><td>Pipe-separated bullet points</td><td>Key responsibilities + skills at a glance</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ==================== HIRING SIGNALS ==================== -->
+<section id="hiring">
+  <h2><span class="step-num">4</span> Hiring Signals <span class="tag new">New</span></h2>
+  <p>Find people on LinkedIn who are actively hiring for roles matching your keywords. Two modes: people search and post scanning.</p>
+
+  <h3>4.1 &mdash; People Search (<code>--find-hiring</code>)</h3>
+  <p>Searches LinkedIn People for profiles with the <strong>#Hiring</strong> badge who match your job keywords.</p>
+  <pre><code><span class="cmd">python</span> main.py <span class="flag">--find-hiring</span> <span class="flag">-k</span> <span class="val">"Marketing Director,CMO"</span> <span class="flag">-l</span> <span class="val">"Bangalore"</span></code></pre>
+
+  <div class="card">
+    <h4>What gets extracted</h4>
+    <ul>
+      <li><strong>Profile info:</strong> Name, title, headline, about, location, LinkedIn URL</li>
+      <li><strong>Contact info:</strong> Email and phone (from LinkedIn contact overlay, if visible)</li>
+      <li><strong>Company details:</strong> Company name, LinkedIn page, website, industry, size</li>
+      <li><strong>Classification:</strong> What role they're hiring for (Marketing, Sales, Engineering, Data, etc.)</li>
+    </ul>
+  </div>
+
+  <h3>4.2 &mdash; Post Scanning (<code>--find-posts</code>)</h3>
+  <p>Searches LinkedIn content/posts for hiring hashtags and extracts who's posting about open roles.</p>
+  <pre><code><span class="cmd">python</span> main.py <span class="flag">--find-posts</span> <span class="flag">-k</span> <span class="val">"Marketing Director"</span></code></pre>
+
+  <div class="card">
+    <h4>Hashtags scanned (14)</h4>
+    <p><code>#hiring</code>, <code>#wearehiring</code>, <code>#jobalert</code>, <code>#jobopening</code>, <code>#openposition</code>, <code>#joinourteam</code>, <code>#nowhiring</code>, <code>#hiringalert</code>, <code>#vacancy</code>, <code>#jobopportunity</code>, <code>#recruitment</code>, <code>#careers</code>, <code>#hotjob</code>, <code>#urgentlyhiring</code></p>
+  </div>
+
+  <h3>4.3 &mdash; Combined Mode</h3>
+  <pre><code><span class="comment"># Both people search + post scan, merged &amp; deduplicated</span>
+<span class="cmd">python</span> main.py <span class="flag">--find-hiring</span> <span class="flag">--find-posts</span> <span class="flag">-k</span> <span class="val">"Head of Marketing"</span></code></pre>
+  <p>Results from both sources are merged into a single <code>hiring_signals_*.csv</code> with a <code>signal_source</code> column (<code>people_search</code> or <code>post_search</code>).</p>
+
+  <h3>4.4 &mdash; Role Classification</h3>
+  <p>Each result is auto-classified into role categories:</p>
+  <div class="grid-3">
+    <div class="card"><h4>Marketing</h4><p>marketing, brand, growth, digital, seo, content, cmo</p></div>
+    <div class="card"><h4>Sales</h4><p>sales, business development, account exec, revenue</p></div>
+    <div class="card"><h4>Engineering</h4><p>engineer, developer, software, frontend, backend, cto</p></div>
+    <div class="card"><h4>Product</h4><p>product manager, product lead, product head, cpo</p></div>
+    <div class="card"><h4>Design</h4><p>designer, ux, ui, creative director, design lead</p></div>
+    <div class="card"><h4>Data</h4><p>data analyst, data scientist, analytics, machine learning</p></div>
+    <div class="card"><h4>HR</h4><p>hr, recruiter, talent acquisition, people ops, chro</p></div>
+    <div class="card"><h4>Finance</h4><p>finance, accounting, cfo, controller, treasury</p></div>
+    <div class="card"><h4>Operations</h4><p>operations, supply chain, logistics, coo, program manager</p></div>
+  </div>
+</section>
+
+<!-- ==================== CONSULTANTS ==================== -->
+<section id="consultants">
+  <h2><span class="step-num">5</span> Consultant Finder <span class="tag new">New</span></h2>
+  <p>Discover recruitment consultants, staffing agencies, and headhunters on LinkedIn. Two modes: focused (tied to your keywords) and broad (generic recruiter list).</p>
+
+  <h3>5.1 &mdash; Focused Mode (<code>--find-consultants</code>)</h3>
+  <p>Searches for recruiters who specifically work in your domain by combining recruiter titles with your job keywords.</p>
+  <pre><code><span class="comment"># Find recruiters who hire for marketing roles in Bangalore</span>
+<span class="cmd">python</span> main.py <span class="flag">--find-consultants</span> <span class="flag">-k</span> <span class="val">"Marketing Director,CMO"</span> <span class="flag">-l</span> <span class="val">"Bangalore"</span></code></pre>
+  <p>Builds queries like: <code>"Recruitment Consultant Marketing Director Bangalore"</code>, <code>"Headhunter CMO Mumbai"</code></p>
+
+  <h3>5.2 &mdash; Broad Mode (<code>--consultants-broad</code>)</h3>
+  <p>Searches for ALL recruiters in your target locations, regardless of what roles they fill. Great for building a master recruiter database.</p>
+  <pre><code><span class="comment"># Find all recruiters in Bangalore + Mumbai (no keyword coupling)</span>
+<span class="cmd">python</span> main.py <span class="flag">--consultants-broad</span> <span class="flag">-l</span> <span class="val">"Bangalore,Mumbai,Delhi"</span></code></pre>
+  <p>Builds queries like: <code>"Recruitment Consultant Bangalore"</code>, <code>"Headhunter Mumbai"</code>, <code>"Staffing Manager Delhi"</code></p>
+
+  <div class="card">
+    <h4>Recruiter titles searched (12)</h4>
+    <p>Recruitment Consultant, Staffing Manager, Headhunter, Executive Search, Placement Consultant, Recruitment Manager, Talent Acquisition Consultant, Recruitment Specialist, Staffing Consultant, Search Consultant, Recruitment Partner, Recruiting</p>
+    <p style="margin-top:8px"><strong>Broad mode</strong> uses all 12 titles. <strong>Focused mode</strong> uses the top 5 to keep query count manageable.</p>
+  </div>
+
+  <h3>5.3 &mdash; What Gets Extracted</h3>
+  <table>
+    <thead><tr><th>Column</th><th>Description</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><code>consultant_type</code></td><td>Classification of what kind of recruiter</td><td>Executive Search, Agency Recruiter, Staffing Firm, HR Consultancy, Recruitment Partner</td></tr>
+      <tr><td><code>is_agency</code></td><td>Is this person at a recruitment agency? (vs in-house)</td><td>True / False</td></tr>
+      <tr><td><code>domains_served</code></td><td>What functional areas they recruit for</td><td>Marketing, Sales</td></tr>
+      <tr><td><code>company</code></td><td>The consultancy/agency name</td><td>ABC Consultants, Korn Ferry, TeamLease</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.4 &mdash; Known Agency Brands (auto-detected)</h3>
+  <div class="grid-2">
+    <div class="card">
+      <h4>Global</h4>
+      <p>Randstad, Adecco, Robert Half, Michael Page, Hays, Korn Ferry, Egon Zehnder, Spencer Stuart, Heidrick &amp; Struggles, Boyden, Kelly Services, Hudson, GI Group, ManpowerGroup</p>
+    </div>
+    <div class="card">
+      <h4>India</h4>
+      <p>TeamLease, ABC Consultants, Quess, CIEL HR, Xpheno, CareerNet, Taggd, Genius Consultants, Mancer Consulting, Hunt Partners, Talent Corner, Antal, Collabera, NRI Consulting, PersolKelly</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== HR ==================== -->
+<section id="hr">
+  <h2><span class="step-num">6</span> Finding HR Contacts</h2>
+  <p>Search LinkedIn for HR/recruiter profiles at companies from your job results.</p>
+
+  <h3>6.1 &mdash; How It Works</h3>
+  <div class="flow">
+    <div class="flow-step">Job CSV<br><small>companies list</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step active">LinkedIn<br><small>people search</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step">HR Contacts<br><small>name + title + URL</small></div>
+  </div>
+
+  <h3>6.2 &mdash; First Run (LinkedIn Login)</h3>
+  <div class="card highlight">
+    <h4>One-time LinkedIn authentication</h4>
+    <p>The first time you use any LinkedIn-powered feature (<code>--find-hr</code>, <code>--find-hiring</code>, <code>--find-posts</code>, <code>--find-consultants</code>), a Chrome window opens for you to log in manually. Your session is saved in <code>.session/chrome_profile/</code> so you only need to do this once.</p>
+    <ol>
+      <li>Run any LinkedIn feature (e.g., <code>python main.py --find-hr</code>)</li>
+      <li>A Chrome window opens at <code>linkedin.com/login</code></li>
+      <li>Log in manually (enter your username + password)</li>
+      <li>Press Enter in the terminal when logged in</li>
+      <li>Session is saved for all future runs</li>
+    </ol>
+  </div>
+
+  <h3>6.3 &mdash; Usage</h3>
+  <pre><code><span class="comment"># During scraping pipeline</span>
+<span class="cmd">python</span> main.py <span class="flag">--find-hr</span>
+
+<span class="comment"># Use an existing jobs CSV (skip re-scraping)</span>
+<span class="cmd">python</span> main.py <span class="flag">--find-hr</span> <span class="flag">--jobs-file</span> <span class="val">output/jobs_20260312.csv</span></code></pre>
+
+  <h3>6.4 &mdash; Safety Limits</h3>
+  <table>
+    <thead><tr><th>Setting</th><th>Value</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Max lookups/session</td><td>50 companies</td><td>Avoid LinkedIn rate-limiting</td></tr>
+      <tr><td>Delay between searches</td><td>3&ndash;8 seconds (random)</td><td>Mimic human behavior</td></tr>
+      <tr><td>Profiles per company</td><td>Top 3</td><td>Focus on most relevant HR contacts</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ==================== EMAILS ==================== -->
+<section id="emails">
+  <h2><span class="step-num">7</span> Email Enrichment</h2>
+  <p>Find HR email addresses using Hunter.io's free API.</p>
+
+  <h3>7.1 &mdash; Setup</h3>
+  <ol>
+    <li>Sign up at <a href="https://hunter.io" style="color:var(--accent)">hunter.io</a> <span class="tag free">Free</span> (50 lookups/month)</li>
+    <li>Copy your API key from the dashboard</li>
+    <li>Add to <code>.env</code>: <code>HUNTER_API_KEY=your_actual_key_here</code></li>
+  </ol>
+
+  <h3>7.2 &mdash; Run</h3>
+  <pre><code><span class="comment"># During full pipeline</span>
+<span class="cmd">python</span> main.py <span class="flag">--find-hr</span> <span class="flag">--enrich-emails</span>
+
+<span class="comment"># On existing HR contacts CSV</span>
+<span class="cmd">python</span> main.py <span class="flag">--enrich-emails</span> <span class="flag">--hr-file</span> <span class="val">output/hr_contacts_20260312.csv</span></code></pre>
+
+  <div class="callout tip">
+    <span class="icon">&#9889;</span>
+    <div><strong>Credit optimization:</strong> Domain searches are cached. If 5 HR contacts are at the same company, only 1 credit is used (not 5).</div>
+  </div>
+</section>
+
+<!-- ==================== DASHBOARD ==================== -->
+<section id="dashboard">
+  <h2><span class="step-num">8</span> Dashboard</h2>
+  <p>Visual web interface to browse, filter, and export your results. Also includes a Scrape Builder to run scrapes from the browser.</p>
+
+  <h3>8.1 &mdash; Launch</h3>
+  <pre><code><span class="cmd">python</span> serve_dashboard.py
+<span class="comment"># Open http://127.0.0.1:8056</span></code></pre>
+
+  <h3>8.2 &mdash; Scrape Builder</h3>
+  <p>Configure and trigger scraping jobs from the browser. All flags are available as checkboxes/inputs:</p>
+  <table>
+    <thead><tr><th>Control</th><th>Type</th><th>Maps To</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Keywords</strong></td><td>Tag input</td><td><code>-k</code></td></tr>
+      <tr><td><strong>Locations</strong></td><td>Tag input</td><td><code>-l</code></td></tr>
+      <tr><td><strong>Platforms</strong></td><td>9 checkboxes</td><td><code>-p</code></td></tr>
+      <tr><td><strong>Max Results</strong></td><td>Number</td><td><code>-n</code></td></tr>
+      <tr><td><strong>Posted Within</strong></td><td>Number (hours)</td><td><code>--hours-old</code></td></tr>
+      <tr><td><strong>Find Hiring Signals</strong></td><td>Toggle</td><td><code>--find-hiring</code></td></tr>
+      <tr><td><strong>Scan Hiring Posts</strong></td><td>Toggle</td><td><code>--find-posts</code></td></tr>
+      <tr><td><strong>Find Consultants (Focused)</strong></td><td>Toggle</td><td><code>--find-consultants</code></td></tr>
+      <tr><td><strong>Find Consultants (Broad)</strong></td><td>Toggle</td><td><code>--consultants-broad</code></td></tr>
+      <tr><td><strong>Find HR Contacts</strong></td><td>Toggle</td><td><code>--find-hr</code></td></tr>
+      <tr><td><strong>Enrich Emails</strong></td><td>Toggle</td><td><code>--enrich-emails</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>8.3 &mdash; Query Builder</h3>
+  <p>Filter loaded job data by role, company, platform, location, salary, experience, work type, company type, and role type. Active filters appear as removable chips.</p>
+
+  <h3>8.4 &mdash; Data Tabs</h3>
+  <table>
+    <thead><tr><th>Tab</th><th>Shows</th><th>Key Columns</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Jobs</strong></td><td>All scraped job listings</td><td>Platform badge, title (clickable), company, location, salary</td></tr>
+      <tr><td><strong>Companies</strong></td><td>Company roll-up from summary CSV</td><td>Company, openings, roles, platforms, HR contacts</td></tr>
+      <tr><td><strong>HR Contacts</strong></td><td>HR people at companies</td><td>Name, title, LinkedIn URL, email, confidence</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ==================== ADVANCED ==================== -->
+<section id="advanced">
+  <h2><span class="step-num">9</span> Advanced Usage</h2>
+  <p>Full CLI reference and common workflows.</p>
+
+  <h3>9.1 &mdash; Full CLI Reference</h3>
+  <table>
+    <thead><tr><th>Flag</th><th>Short</th><th>Description</th><th>Default</th></tr></thead>
+    <tbody>
+      <tr><td><code>--keywords</code></td><td><code>-k</code></td><td>Comma-separated job title keywords</td><td>12 marketing titles</td></tr>
+      <tr><td><code>--location</code></td><td><code>-l</code></td><td>Comma-separated locations</td><td>India + 6 cities</td></tr>
+      <tr><td><code>--platforms</code></td><td><code>-p</code></td><td>Platform list or <code>all</code></td><td>all (9 platforms)</td></tr>
+      <tr><td><code>--max-results</code></td><td><code>-n</code></td><td>Max results per platform per search</td><td>50</td></tr>
+      <tr><td><code>--hours-old</code></td><td>&mdash;</td><td>Only jobs posted within N hours</td><td>168 (7 days)</td></tr>
+      <tr><td><code>--find-hiring</code></td><td>&mdash;</td><td>Find #Hiring profiles on LinkedIn</td><td>off</td></tr>
+      <tr><td><code>--find-posts</code></td><td>&mdash;</td><td>Scan LinkedIn posts for hiring hashtags</td><td>off</td></tr>
+      <tr><td><code>--find-consultants</code></td><td>&mdash;</td><td>Find recruiters (focused, keyword-tied)</td><td>off</td></tr>
+      <tr><td><code>--consultants-broad</code></td><td>&mdash;</td><td>Find ALL recruiters in locations</td><td>off</td></tr>
+      <tr><td><code>--find-hr</code></td><td>&mdash;</td><td>Find HR contacts at companies</td><td>off</td></tr>
+      <tr><td><code>--enrich-emails</code></td><td>&mdash;</td><td>Use Hunter.io for email lookup</td><td>off</td></tr>
+      <tr><td><code>--jobs-file</code></td><td>&mdash;</td><td>Path to existing jobs CSV</td><td>&mdash;</td></tr>
+      <tr><td><code>--hr-file</code></td><td>&mdash;</td><td>Path to existing HR contacts CSV</td><td>&mdash;</td></tr>
+      <tr><td><code>--output-dir</code></td><td><code>-o</code></td><td>Output directory for CSVs</td><td>output/</td></tr>
+      <tr><td><code>--dashboard</code></td><td>&mdash;</td><td>Launch web dashboard after run</td><td>off</td></tr>
+      <tr><td><code>--port</code></td><td>&mdash;</td><td>Dashboard server port</td><td>8050</td></tr>
+    </tbody>
+  </table>
+
+  <h3>9.2 &mdash; Common Workflows</h3>
+
+  <div class="card">
+    <h4>Workflow A: Quick LinkedIn-only job scan</h4>
+    <pre><code><span class="cmd">python</span> main.py <span class="flag">-p</span> <span class="val">linkedin</span> <span class="flag">-k</span> <span class="val">"VP Marketing"</span> <span class="flag">-l</span> <span class="val">"India"</span> <span class="flag">-n</span> <span class="val">20</span></code></pre>
+    <p>Fast scan: ~2 minutes. Good for a quick pulse check on what's available.</p>
+  </div>
+
+  <div class="card">
+    <h4>Workflow B: "Who's actively hiring?" (people + posts)</h4>
+    <pre><code><span class="cmd">python</span> main.py <span class="flag">--find-hiring</span> <span class="flag">--find-posts</span> <span class="flag">-k</span> <span class="val">"Marketing Director,CMO"</span> <span class="flag">-l</span> <span class="val">"Bangalore"</span>
+<span class="flag">--jobs-file</span> <span class="val">output/jobs_LATEST.csv</span></code></pre>
+    <p>Skip job scraping, just find people who are actively hiring for marketing roles. Check <code>hiring_signals_*.csv</code> for names, emails, and companies.</p>
+  </div>
+
+  <div class="card">
+    <h4>Workflow C: Build a recruiter database</h4>
+    <pre><code><span class="cmd">python</span> main.py <span class="flag">--consultants-broad</span> <span class="flag">-l</span> <span class="val">"Bangalore,Mumbai,Delhi"</span> <span class="flag">-n</span> <span class="val">100</span>
+<span class="flag">--jobs-file</span> <span class="val">output/jobs_LATEST.csv</span></code></pre>
+    <p>Builds a master list of all recruitment consultants, staffing firms, and headhunters in your target cities. Check <code>consultants_*.csv</code> for names, agencies, and contact info.</p>
+  </div>
+
+  <div class="card">
+    <h4>Workflow D: Deep search + HR outreach</h4>
+    <pre><code><span class="comment"># Step 1: Broad job scrape across all platforms</span>
+<span class="cmd">python</span> main.py <span class="flag">-n</span> <span class="val">100</span>
+
+<span class="comment"># Step 2: Find HR at those companies + enrich emails</span>
+<span class="cmd">python</span> main.py <span class="flag">--find-hr</span> <span class="flag">--enrich-emails</span> <span class="flag">--jobs-file</span> <span class="val">output/jobs_LATEST.csv</span>
+
+<span class="comment"># Step 3: View everything in the dashboard</span>
+<span class="cmd">python</span> serve_dashboard.py</code></pre>
+    <p>Run in stages to review results between steps and control costs.</p>
+  </div>
+
+  <div class="card highlight">
+    <h4>Workflow E: Everything at once</h4>
+    <pre><code><span class="cmd">python</span> main.py <span class="flag">--find-hiring</span> <span class="flag">--find-posts</span> <span class="flag">--find-consultants</span> <span class="flag">--find-hr</span> <span class="flag">--enrich-emails</span> <span class="flag">--dashboard</span></code></pre>
+    <p>The full pipeline: scrape 9 platforms, find hiring signals, discover recruiters, find HR contacts, enrich emails, open dashboard. Takes 30-60 minutes.</p>
+  </div>
+
+  <h3>9.3 &mdash; Project Structure</h3>
+  <div class="arch-diagram">job_hunter/
+  ├── main.py                    <span style="color:#7c5cfc">&larr; CLI entry point (scrape pipeline)</span>
+  ├── query.py                   <span style="color:#7c5cfc">&larr; CLI query tool (filter saved data)</span>
+  ├── config.py                  <span style="color:#7c5cfc">&larr; Settings &amp; defaults</span>
+  ├── dashboard.html             <span style="color:#7c5cfc">&larr; Web dashboard (Scrape + Query Builder)</span>
+  ├── serve_dashboard.py         <span style="color:#7c5cfc">&larr; Dashboard server + scrape API</span>
+  ├── guide.html                 <span style="color:#7c5cfc">&larr; This guide</span>
+  ├── requirements.txt
+  ├── .env.example
+  │
+  ├── scrapers/
+  │   ├── linkedin_indeed.py     <span style="color:#22c55e">&larr; python-jobspy wrapper</span>
+  │   ├── naukri.py              <span style="color:#22c55e">&larr; Playwright browser scraper</span>
+  │   ├── cutshort.py            <span style="color:#22c55e">&larr; HTTP + SSR parsing</span>
+  │   ├── instahyre.py           <span style="color:#22c55e">&larr; Playwright browser scraper</span>
+  │   ├── wellfound.py           <span style="color:#22c55e">&larr; Playwright + login</span>
+  │   ├── iimjobs.py             <span style="color:#22c55e">&larr; Playwright browser scraper</span>
+  │   ├── hirist.py              <span style="color:#22c55e">&larr; Playwright browser scraper</span>
+  │   └── weekday.py             <span style="color:#22c55e">&larr; HTTP + SSR + Playwright fallback</span>
+  │
+  ├── hr_finder/
+  │   ├── linkedin_people.py     <span style="color:#f59e0b">&larr; LinkedIn people search for HR contacts</span>
+  │   ├── hiring_signals.py      <span style="color:#f59e0b">&larr; #Hiring profiles + posts + consultants</span>
+  │   └── email_enricher.py      <span style="color:#f59e0b">&larr; Hunter.io integration</span>
+  │
+  ├── utils/
+  │   ├── export.py              <span style="color:#3b82f6">&larr; CSV export (jobs, signals, consultants, HR, summary)</span>
+  │   └── enricher.py            <span style="color:#3b82f6">&larr; Job enrichment (company/role type, summary)</span>
+  │
+  ├── output/                    <span style="color:#8b8fa8">&larr; Generated CSVs land here</span>
+  └── .session/                  <span style="color:#8b8fa8">&larr; LinkedIn cookies (auto-created)</span></div>
+</section>
+
+<!-- ==================== TROUBLESHOOTING ==================== -->
+<section id="troubleshooting">
+  <h2><span class="step-num">10</span> Troubleshooting</h2>
+  <p>Common issues and how to fix them.</p>
+
+  <div class="card">
+    <h4>LinkedIn features return 0 results</h4>
+    <ul>
+      <li>Session may have expired. Delete <code>.session/chrome_profile/</code> folder and log in again</li>
+      <li>LinkedIn may have flagged your session &mdash; wait a few hours before retrying</li>
+      <li>If profiles load but no data is extracted, LinkedIn may have changed its DOM. Check for tool updates</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h4>UnicodeEncodeError on Windows</h4>
+    <ul>
+      <li>This is a Windows console (cp1252) issue with special characters</li>
+      <li>Run with <code>set PYTHONIOENCODING=utf-8 &amp;&amp; python main.py</code></li>
+      <li>Or use Windows Terminal (supports UTF-8 by default) instead of cmd.exe</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h4>Naukri / Instahyre / IIMJobs / Hirist returns 0 results</h4>
+    <ul>
+      <li>Don't close the browser window while scraping</li>
+      <li>Solve any captcha manually if it appears</li>
+      <li>Try reducing <code>-n</code> to 20</li>
+      <li>Ensure Playwright Chromium is installed: <code>playwright install chromium</code></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h4>Hunter.io returns no emails</h4>
+    <ul>
+      <li>Verify your API key is correct in <code>.env</code></li>
+      <li>Check your credit balance at <code>hunter.io/dashboard</code></li>
+      <li>Some small companies don't have domains indexed by Hunter</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h4>Dashboard doesn't load CSVs</h4>
+    <ul>
+      <li>Use the server: <code>python serve_dashboard.py</code> (not direct file:// opening)</li>
+      <li>Or drag-drop CSV files onto the dashboard manually</li>
+      <li>Check that CSV files exist in <code>output/</code></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h4>Scrape Builder shows "A scrape is already running"</h4>
+    <ul>
+      <li>Only one scrape at a time. Wait for current one to finish</li>
+      <li>If stuck, restart: <code>python serve_dashboard.py</code></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h4>Port already in use</h4>
+    <ul>
+      <li>Kill the existing process or change port</li>
+      <li><code>python main.py --dashboard --port 9090</code></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h4>python-jobspy errors / 429 rate-limit</h4>
+    <ul>
+      <li>Reduce <code>-n</code> to 20-25</li>
+      <li>Search fewer locations at once</li>
+      <li>Wait 10-15 minutes before retrying</li>
+    </ul>
+  </div>
+
+  <div class="callout danger">
+    <span class="icon">&#9888;</span>
+    <div><strong>Rate-limiting awareness.</strong> All platforms have anti-bot protections. Space out large searches with breaks between runs. LinkedIn-powered features use random delays (3-8 seconds) to stay under the radar.</div>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <p><strong>Job Hunter v3.0</strong> &middot; Multi-Platform Job Scraper + Hiring Signals + Consultant Finder</p>
+  <p style="margin-top:6px;">Built with python-jobspy, Playwright, Hunter.io, and PapaParse</p>
+  <p style="margin-top:6px;"><a href="dashboard.html">Open Dashboard</a></p>
+</footer>
+
+</body>
+</html>

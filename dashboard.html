@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Hunter Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242835;
+    --border: #2e3348;
+    --text: #e4e6f0;
+    --text-dim: #8b8fa3;
+    --accent: #6366f1;
+    --accent-hover: #818cf8;
+    --linkedin: #0a66c2;
+    --indeed: #7c3aed;
+    --naukri: #0d9488;
+    --cutshort: #e85d04;
+    --instahyre: #2563eb;
+    --wellfound: #000000;
+    --iimjobs: #d97706;
+    --hirist: #7c3aed;
+    --weekday: #059669;
+    --crescendo: #9333ea;
+    --michaelpage: #0891b2;
+    --sutrahr: #c026d3;
+    --antal: #b91c1c;
+    --cielhr: #0369a1;
+    --topgear: #ca8a04;
+    --abcconsultants: #6d28d9;
+    --kornferry: #0e7490;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* --- Header --- */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .header h1 span { color: var(--accent); }
+  .header-actions { display: flex; gap: 10px; }
+
+  /* --- Main Container --- */
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+  /* --- Drop Zone --- */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface);
+    margin-bottom: 24px;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(99,102,241,0.05);
+  }
+  .drop-zone h2 { font-size: 18px; margin-bottom: 8px; }
+  .drop-zone p { color: var(--text-dim); font-size: 14px; }
+  .drop-zone input { display: none; }
+  .drop-zone .file-tags { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .file-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 4px 12px; border-radius: 20px; font-size: 12px;
+  }
+  .file-tag .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .file-tag .dot.loaded { background: var(--success); }
+  .file-tag .dot.empty { background: var(--border); }
+
+  .hidden { display: none !important; }
+
+  /* --- Quick Filter Tags --- */
+  .quick-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .quick-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+    transition: all 0.2s;
+  }
+  .quick-tag:hover { border-color: var(--accent); color: var(--text); }
+  .quick-tag.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .quick-tag .tag-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+
+  /* --- Stats --- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .stat-card .value { font-size: 32px; font-weight: 700; }
+  .stat-card .label { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+  .stat-card.accent .value { color: var(--accent); }
+
+  /* --- Tabs --- */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 4px;
+    border: 1px solid var(--border);
+    width: fit-content;
+  }
+  .tab-btn {
+    padding: 10px 24px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { color: var(--text); background: var(--surface2); }
+  .tab-btn.active { color: #fff; background: var(--accent); }
+  .tab-btn .count {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    margin-left: 6px;
+  }
+
+  /* --- Filters --- */
+  .filter-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+  }
+
+  select.filter-select {
+    padding: 10px 32px 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b8fa3' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    min-width: 140px;
+  }
+  select.filter-select:focus { border-color: var(--accent); }
+
+  .btn {
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--surface2); border-color: var(--accent); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+
+  /* --- Table --- */
+  .table-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .table-scroll { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  thead { background: var(--surface2); }
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  th:hover { color: var(--text); }
+  th .sort-arrow { margin-left: 4px; font-size: 10px; }
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  tr:hover td { background: rgba(99,102,241,0.04); }
+  tr:last-child td { border-bottom: none; }
+
+  /* --- Badges --- */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-linkedin { background: rgba(10,102,194,0.15); color: #60a5fa; }
+  .badge-indeed { background: rgba(124,58,237,0.15); color: #a78bfa; }
+  .badge-naukri { background: rgba(13,148,136,0.15); color: #5eead4; }
+  .badge-cutshort { background: rgba(232,93,4,0.15); color: #fb923c; }
+  .badge-instahyre { background: rgba(37,99,235,0.15); color: #93c5fd; }
+  .badge-wellfound { background: rgba(255,255,255,0.10); color: #d1d5db; }
+  .badge-iimjobs { background: rgba(217,119,6,0.15); color: #fbbf24; }
+  .badge-hirist { background: rgba(124,58,237,0.15); color: #c4b5fd; }
+  .badge-weekday { background: rgba(5,150,105,0.15); color: #6ee7b7; }
+  .badge-crescendo { background: rgba(147,51,234,0.15); color: #c084fc; }
+  .badge-michaelpage { background: rgba(8,145,178,0.15); color: #67e8f9; }
+  .badge-sutrahr { background: rgba(192,38,211,0.15); color: #e879f9; }
+  .badge-antal { background: rgba(185,28,28,0.15); color: #fca5a5; }
+  .badge-cielhr { background: rgba(3,105,161,0.15); color: #7dd3fc; }
+  .badge-topgear { background: rgba(202,138,4,0.15); color: #fde047; }
+  .badge-abcconsultants { background: rgba(109,40,217,0.15); color: #c4b5fd; }
+  .badge-kornferry { background: rgba(14,116,144,0.15); color: #67e8f9; }
+
+  .link-btn {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .link-btn:hover { color: var(--accent-hover); text-decoration: underline; }
+
+  .confidence-bar {
+    display: inline-block;
+    width: 60px;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  .confidence-bar .fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  /* --- Pagination --- */
+  .table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .pagination { display: flex; gap: 4px; align-items: center; }
+  .pagination button {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .pagination button:hover { border-color: var(--accent); }
+  .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .pagination .page-info { padding: 0 12px; }
+
+  /* --- Empty State --- */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+  }
+  .empty-state svg { margin-bottom: 16px; opacity: 0.5; }
+  .empty-state h3 { font-size: 16px; margin-bottom: 8px; color: var(--text); }
+
+  /* --- Query Panel --- */
+  .query-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .query-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  .query-header:hover { background: var(--surface2); }
+  .query-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .query-header h3 svg { color: var(--accent); }
+  .query-toggle {
+    font-size: 12px;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+  .query-panel.open .query-toggle { transform: rotate(180deg); }
+  .query-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0 20px;
+  }
+  .query-panel.open .query-body {
+    max-height: 600px;
+    padding: 0 20px 20px;
+  }
+  .query-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .query-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .query-field input,
+  .query-field select {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .query-field input:focus,
+  .query-field select:focus { border-color: var(--accent); }
+  .query-field select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b8fa3' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+  .query-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .btn-query {
+    padding: 10px 28px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-query:hover { background: var(--accent-hover); }
+  .btn-query-clear {
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-query-clear:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* --- Shortlist Star --- */
+  .star-btn {
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-dim);
+    opacity: 0.35;
+    transition: color 0.15s, opacity 0.15s, transform 0.15s;
+    user-select: none;
+    line-height: 1;
+  }
+  .star-btn:hover { color: #f59e0b; opacity: 1; transform: scale(1.2); }
+  .star-btn.starred { color: #f59e0b; opacity: 1; }
+  td:has(.star-btn) { text-align: center; width: 36px; padding: 6px 4px !important; }
+  .shortlist-count { font-size: 12px; color: #f59e0b; font-weight: 600; margin-left: 6px; }
+
+  .active-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .active-filters:empty { display: none; margin: 0; }
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    background: rgba(99,102,241,0.12);
+    border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--accent-hover);
+    font-weight: 500;
+  }
+  .filter-chip .chip-label { color: var(--text-dim); font-weight: 400; }
+  .filter-chip .chip-close {
+    cursor: pointer;
+    opacity: 0.6;
+    font-size: 14px;
+    line-height: 1;
+    margin-left: 2px;
+  }
+  .filter-chip .chip-close:hover { opacity: 1; }
+  .query-result-count {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .query-result-count strong { color: var(--accent); }
+
+  /* --- Scrape Builder Extras --- */
+  .scrape-tag-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 42px;
+    align-items: center;
+    cursor: text;
+    transition: border-color 0.2s;
+  }
+  .scrape-tag-input:focus-within { border-color: var(--accent); }
+  .scrape-tag-input input {
+    border: none !important;
+    background: transparent !important;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    flex: 1;
+    min-width: 100px;
+    padding: 4px 0 !important;
+  }
+  .scrape-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    background: rgba(99,102,241,0.15);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 14px;
+    font-size: 12px;
+    color: var(--accent-hover);
+    white-space: nowrap;
+  }
+  .scrape-tag .tag-remove {
+    cursor: pointer;
+    opacity: 0.6;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .scrape-tag .tag-remove:hover { opacity: 1; }
+
+  .scrape-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+  }
+  .scrape-toggle input[type="checkbox"] {
+    width: 36px;
+    height: 20px;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--border);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .scrape-toggle input[type="checkbox"]::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: var(--text-dim);
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+  .scrape-toggle input[type="checkbox"]:checked { background: var(--accent); }
+  .scrape-toggle input[type="checkbox"]:checked::after { left: 18px; background: #fff; }
+  .scrape-toggle span { font-size: 13px; color: var(--text-dim); }
+
+  .platform-checks { display: flex; gap: 14px; padding: 10px 0; flex-wrap: wrap; }
+  .platform-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .platform-check input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+
+  /* --- Multi-Select Dropdown --- */
+  .multi-select { position: relative; }
+  .multi-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    user-select: none;
+    min-height: 42px;
+  }
+  .multi-select-trigger:hover { border-color: var(--accent); }
+  .multi-select.open .multi-select-trigger { border-color: var(--accent); }
+  .multi-select-trigger .ms-summary { flex: 1; }
+  .multi-select-trigger .ms-arrow {
+    font-size: 10px;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+    margin-left: 8px;
+  }
+  .multi-select.open .ms-arrow { transform: rotate(180deg); }
+  .multi-select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    z-index: 100;
+    max-height: 340px;
+    overflow-y: auto;
+    display: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .multi-select.open .multi-select-dropdown { display: block; }
+  .multi-select-group { padding: 4px 0; }
+  .multi-select-group + .multi-select-group { border-top: 1px solid var(--border); }
+  .ms-group-header {
+    padding: 8px 14px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ms-group-header .ms-toggle-all {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .ms-group-header .ms-toggle-all:hover { color: var(--accent-hover); }
+  .multi-select-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    transition: background 0.15s;
+  }
+  .multi-select-item:hover { background: var(--surface2); }
+  .multi-select-item input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; }
+  .multi-select-item .ms-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* --- Scrape Builder 2-Column --- */
+  .scrape-builder-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .scrape-col { display: flex; flex-direction: column; gap: 14px; }
+  .scrape-col .query-field { margin: 0; }
+  .scrape-compact-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  /* --- Scrape Type Categories (accordion) --- */
+  .scrape-categories { display: flex; flex-direction: column; gap: 6px; }
+  .scrape-category {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .scrape-category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    transition: background 0.2s;
+  }
+  .scrape-category-header:hover { background: var(--surface2); }
+  .scrape-category-header .cat-icon { color: var(--accent); margin-right: 8px; font-size: 14px; }
+  .scrape-category-header .cat-arrow {
+    font-size: 10px;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+  .scrape-category.open .cat-arrow { transform: rotate(180deg); }
+  .scrape-category-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0 14px;
+  }
+  .scrape-category.open .scrape-category-body {
+    max-height: 300px;
+    padding: 4px 14px 12px;
+  }
+
+  @media (max-width: 900px) {
+    .scrape-builder-grid { grid-template-columns: 1fr; }
+  }
+
+  .scrape-log {
+    background: #0d0f14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    max-height: 260px;
+    overflow-y: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    margin-top: 14px;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .scrape-log .log-success { color: var(--success); }
+  .scrape-log .log-error { color: var(--danger); }
+  .scrape-log .log-info { color: var(--accent-hover); }
+
+  .scrape-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    margin-left: 12px;
+    font-weight: 400;
+  }
+  .scrape-status .pulse {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  @keyframes pulse-anim { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .scrape-status.st-idle .pulse { background: var(--text-dim); }
+  .scrape-status.st-running .pulse { background: var(--warning); animation: pulse-anim 1.2s infinite; }
+  .scrape-status.st-completed .pulse { background: var(--success); }
+  .scrape-status.st-error .pulse { background: var(--danger); }
+
+  .scrape-output-files { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .scrape-output-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.25);
+    border-radius: 14px;
+    font-size: 12px;
+    color: var(--success);
+  }
+
+  /* --- Responsive --- */
+  @media (max-width: 768px) {
+    .container { padding: 16px; }
+    .header { padding: 12px 16px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .filter-bar { flex-direction: column; }
+    .search-box { min-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1><span>Job Hunter</span> Dashboard</h1>
+  <div class="header-actions">
+    <a href="guide.html" class="btn" style="text-decoration:none;margin-right:8px;background:transparent;border-color:var(--border);color:var(--text-dim)">Guide</a>
+    <button class="btn" onclick="exportCurrentView()">Export CSV</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Drop Zone -->
+  <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <h2>Load your CSV files</h2>
+    <p>Drag & drop or click to browse. Accepts: jobs, summary, and HR contacts CSVs.</p>
+    <input type="file" id="fileInput" multiple accept=".csv">
+    <div class="file-tags">
+      <span class="file-tag"><span class="dot empty" id="dotJobs"></span> Jobs</span>
+      <span class="file-tag"><span class="dot empty" id="dotSummary"></span> Companies</span>
+      <span class="file-tag"><span class="dot empty" id="dotHR"></span> HR Contacts</span>
+      <span class="file-tag"><span class="dot empty" id="dotHiring"></span> Hiring Signals</span>
+      <span class="file-tag"><span class="dot empty" id="dotConsultants"></span> Consultants</span>
+      <span class="file-tag"><span class="dot empty" id="dotFirmPosts"></span> Firm Posts</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats hidden" id="statsBar">
+    <div class="stat-card accent">
+      <div class="value" id="statJobs">0</div>
+      <div class="label">Total Jobs</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" id="statCompanies">0</div>
+      <div class="label">Companies</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" id="statPlatforms">0</div>
+      <div class="label">Platforms</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" id="statHR">0</div>
+      <div class="label">HR Contacts</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" id="statEmails">0</div>
+      <div class="label">Emails Found</div>
+    </div>
+  </div>
+
+  <!-- Scrape Builder Panel -->
+  <div class="query-panel" id="scrapePanel">
+    <div class="query-header" onclick="toggleScrapePanel()">
+      <h3>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Scrape Builder
+        <span class="scrape-status st-idle" id="scrapeStatusBadge">
+          <span class="pulse"></span>
+          <span id="scrapeStatusText">Idle</span>
+        </span>
+      </h3>
+      <span class="query-toggle">&#9660;</span>
+    </div>
+    <div class="query-body">
+      <div class="scrape-builder-grid">
+        <!-- LEFT COLUMN: Inputs -->
+        <div class="scrape-col">
+          <div class="query-field">
+            <label>Keywords / Job Titles <span class="ms-toggle-all" onclick="loadDefaultKeywords()" style="margin-left:8px;font-size:11px;color:var(--accent);cursor:pointer;font-weight:500;text-transform:none;letter-spacing:0">Load Defaults</span></label>
+            <div class="scrape-tag-input" id="scrapeKeywordsWrap" onclick="this.querySelector('input').focus()">
+              <input type="text" id="scrapeKeywordInput" placeholder="Type and press Enter...">
+            </div>
+          </div>
+          <div class="query-field">
+            <label>Locations <span class="ms-toggle-all" onclick="loadDefaultLocations()" style="margin-left:8px;font-size:11px;color:var(--accent);cursor:pointer;font-weight:500;text-transform:none;letter-spacing:0">Load Defaults</span></label>
+            <div class="scrape-tag-input" id="scrapeLocationsWrap" onclick="this.querySelector('input').focus()">
+              <input type="text" id="scrapeLocationInput" placeholder="Type and press Enter...">
+            </div>
+          </div>
+          <div class="query-field">
+            <label>Platforms</label>
+            <div class="multi-select" id="platformMultiSelect">
+              <div class="multi-select-trigger" onclick="toggleMultiSelect('platformMultiSelect')">
+                <span class="ms-summary" id="platformSummary">0 selected</span>
+                <span class="ms-arrow">&#9660;</span>
+              </div>
+              <div class="multi-select-dropdown">
+                <div class="multi-select-group">
+                  <div class="ms-group-header">Job Boards <span class="ms-toggle-all" onclick="event.stopPropagation();toggleGroupPlatforms('boards')">Toggle All</span></div>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="linkedin" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--linkedin)"></span> LinkedIn</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="indeed" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--indeed)"></span> Indeed</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="naukri" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--naukri)"></span> Naukri</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="cutshort" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--cutshort)"></span> Cutshort</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="instahyre" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--instahyre)"></span> Instahyre</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="wellfound" data-group="boards" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--wellfound)"></span> Wellfound</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="iimjobs" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--iimjobs)"></span> IIMJobs</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="hirist" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--hirist)"></span> Hirist</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="weekday" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--weekday)"></span> Weekday</label>
+                </div>
+                <div class="multi-select-group">
+                  <div class="ms-group-header">Recruiting Firms <span class="ms-toggle-all" onclick="event.stopPropagation();toggleGroupPlatforms('firms')">Toggle All</span></div>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="crescendo" data-group="firms" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--crescendo)"></span> Crescendo Global</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="michaelpage" data-group="firms" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--michaelpage)"></span> Michael Page</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="sutrahr" data-group="firms" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--sutrahr)"></span> SutraHR</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="antal" data-group="firms" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--antal)"></span> Antal International</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="cielhr" data-group="firms" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--cielhr)"></span> CIEL HR</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="topgear" data-group="firms" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--topgear)"></span> TopGear Consultants</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="abcconsultants" data-group="firms" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--abcconsultants)"></span> ABC Consultants</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="kornferry" data-group="firms" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--kornferry)"></span> Korn Ferry</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="scrape-compact-row">
+            <div class="query-field">
+              <label>Max Results (per search)</label>
+              <input type="number" id="scrapeMaxResults" value="50" min="1" max="500">
+            </div>
+            <div class="query-field">
+              <label>Posted Within (hours)</label>
+              <input type="number" id="scrapeHoursOld" value="168" min="1" max="720">
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Scrape Types -->
+        <div class="scrape-col">
+          <div class="query-field">
+            <label>What to Scrape</label>
+            <div class="scrape-categories">
+              <!-- LinkedIn Signals -->
+              <div class="scrape-category open" id="catLinkedinSignals">
+                <div class="scrape-category-header" onclick="toggleCategory('catLinkedinSignals')">
+                  <span><span class="cat-icon">&#128225;</span> LinkedIn Signals</span>
+                  <span class="cat-arrow">&#9660;</span>
+                </div>
+                <div class="scrape-category-body">
+                  <div class="scrape-toggle">
+                    <input type="checkbox" id="scrapeFindHiring">
+                    <span>#Hiring people on LinkedIn</span>
+                  </div>
+                  <div class="scrape-toggle">
+                    <input type="checkbox" id="scrapeFindPosts">
+                    <span>Scan hiring posts &amp; hashtags</span>
+                  </div>
+                  <div class="scrape-toggle">
+                    <input type="checkbox" id="scrapeFindFirmPosts">
+                    <span>Posts from recruiting firms</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recruiter Discovery -->
+              <div class="scrape-category open" id="catRecruiterDiscovery">
+                <div class="scrape-category-header" onclick="toggleCategory('catRecruiterDiscovery')">
+                  <span><span class="cat-icon">&#128101;</span> Recruiter Discovery</span>
+                  <span class="cat-arrow">&#9660;</span>
+                </div>
+                <div class="scrape-category-body">
+                  <div class="scrape-toggle">
+                    <input type="checkbox" id="scrapeFindConsultants">
+                    <span>Focused consultants (keyword-tied)</span>
+                  </div>
+                  <div class="scrape-toggle">
+                    <input type="checkbox" id="scrapeConsultantsBroad">
+                    <span>Broad consultants (location-only)</span>
+                  </div>
+                  <div class="scrape-toggle">
+                    <input type="checkbox" id="scrapeTargetCompanies">
+                    <span>HR/TA at target companies</span>
+                  </div>
+                  <div class="scrape-toggle">
+                    <input type="checkbox" id="scrapeFindHR">
+                    <span>HR from scraped job results</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Email Enrichment -->
+              <div class="scrape-category" id="catEmailEnrich">
+                <div class="scrape-category-header" onclick="toggleCategory('catEmailEnrich')">
+                  <span><span class="cat-icon">&#9993;</span> Email Enrichment</span>
+                  <span class="cat-arrow">&#9660;</span>
+                </div>
+                <div class="scrape-category-body">
+                  <div class="scrape-toggle">
+                    <input type="checkbox" id="scrapeEnrichEmails">
+                    <span>Hunter.io email lookup</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="query-actions" style="margin-top:18px">
+        <button class="btn-query" id="scrapeStartBtn" onclick="startScrape()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Start Scraping
+        </button>
+        <button class="btn-query-clear" id="scrapeStopBtn" onclick="stopScrapeUI()" style="display:none">Cancel</button>
+        <button class="btn-query-clear" onclick="loadScrapeDefaults()">Load Defaults</button>
+      </div>
+      <div class="scrape-log hidden" id="scrapeLog"></div>
+      <div class="scrape-output-files hidden" id="scrapeOutputFiles"></div>
+    </div>
+  </div>
+
+  <!-- Query Builder Panel -->
+  <div class="query-panel open hidden" id="queryPanel">
+    <div class="query-header" onclick="toggleQueryPanel()">
+      <h3>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Query Builder
+      </h3>
+      <span class="query-toggle">&#9660;</span>
+    </div>
+    <div class="query-body">
+      <div class="query-grid">
+        <div class="query-field">
+          <label>Job Role / Title</label>
+          <input type="text" id="qRole" placeholder="e.g. CMO, Marketing Director">
+        </div>
+        <div class="query-field">
+          <label>Company</label>
+          <input type="text" id="qCompany" placeholder="e.g. Google, Flipkart">
+        </div>
+        <div class="query-field">
+          <label>Platform</label>
+          <select id="qPlatform">
+            <option value="">All Platforms</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="indeed">Indeed</option>
+            <option value="naukri">Naukri</option>
+            <option value="cutshort">Cutshort</option>
+            <option value="instahyre">Instahyre</option>
+            <option value="wellfound">Wellfound</option>
+            <option value="iimjobs">IIMJobs</option>
+            <option value="hirist">Hirist</option>
+            <option value="weekday">Weekday</option>
+            <option value="crescendo">Crescendo Global</option>
+            <option value="michaelpage">Michael Page</option>
+            <option value="sutrahr">SutraHR</option>
+            <option value="antal">Antal International</option>
+            <option value="cielhr">CIEL HR</option>
+            <option value="topgear">TopGear</option>
+            <option value="abcconsultants">ABC Consultants</option>
+            <option value="kornferry">Korn Ferry</option>
+          </select>
+        </div>
+        <div class="query-field">
+          <label>Location</label>
+          <input type="text" id="qLocation" placeholder="e.g. Bangalore, India, Remote">
+        </div>
+        <div class="query-field">
+          <label>Salary Range</label>
+          <select id="qSalary">
+            <option value="">All Salaries</option>
+            <option value="Under 5L">Under 5 Lacs</option>
+            <option value="5L - 10L">5 - 10 Lacs</option>
+            <option value="10L - 20L">10 - 20 Lacs</option>
+            <option value="20L - 50L">20 - 50 Lacs</option>
+            <option value="50L - 1Cr">50L - 1 Crore</option>
+            <option value="1Cr+">1 Crore+</option>
+            <option value="Under $50K">Under $50K</option>
+            <option value="$50K - $100K">$50K - $100K</option>
+            <option value="$100K - $150K">$100K - $150K</option>
+            <option value="$150K - $200K">$150K - $200K</option>
+            <option value="$200K+">$200K+</option>
+          </select>
+        </div>
+        <div class="query-field">
+          <label>Experience</label>
+          <select id="qExperience">
+            <option value="">All Experience</option>
+            <option value="0-2">0 - 2 years</option>
+            <option value="3-5">3 - 5 years</option>
+            <option value="6-10">6 - 10 years</option>
+            <option value="11-15">11 - 15 years</option>
+            <option value="16+">16+ years</option>
+          </select>
+        </div>
+        <div class="query-field">
+          <label>Work Type</label>
+          <select id="qWorkType">
+            <option value="">All Types</option>
+            <option value="remote">Remote</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="onsite">Onsite</option>
+          </select>
+        </div>
+        <div class="query-field">
+          <label>Company Type</label>
+          <select id="qCompanyType">
+            <option value="">All Types</option>
+            <option value="B2B">B2B</option>
+            <option value="B2C">B2C</option>
+            <option value="D2C">D2C</option>
+            <option value="Mixed">Mixed</option>
+          </select>
+        </div>
+        <div class="query-field">
+          <label>Role Type</label>
+          <select id="qRoleType">
+            <option value="">All Types</option>
+            <option value="B2B">B2B Marketing</option>
+            <option value="B2C">B2C Marketing</option>
+            <option value="D2C">D2C Marketing</option>
+            <option value="Growth">Growth</option>
+            <option value="Brand">Brand</option>
+          </select>
+        </div>
+        <div class="query-field">
+          <label>Sort By</label>
+          <select id="qSortBy">
+            <option value="">Default</option>
+            <option value="title-asc">Title (A-Z)</option>
+            <option value="title-desc">Title (Z-A)</option>
+            <option value="company-asc">Company (A-Z)</option>
+            <option value="company-desc">Company (Z-A)</option>
+            <option value="location-asc">Location (A-Z)</option>
+            <option value="location-desc">Location (Z-A)</option>
+            <option value="salary-desc">Salary (High-Low)</option>
+            <option value="salary-asc">Salary (Low-High)</option>
+            <option value="date_posted-desc">Newest First</option>
+            <option value="date_posted-asc">Oldest First</option>
+            <option value="platform-asc">Platform (A-Z)</option>
+          </select>
+        </div>
+        <div class="query-field">
+          <label>Shortlist</label>
+          <select id="qShortlist">
+            <option value="">All Items</option>
+            <option value="yes">Shortlisted Only</option>
+            <option value="no">Not Shortlisted</option>
+          </select>
+        </div>
+      </div>
+      <div class="query-actions">
+        <button class="btn-query" onclick="runQuery()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Run Query
+        </button>
+        <button class="btn-query-clear" onclick="clearQuery()">Clear All</button>
+        <span class="query-result-count" id="queryResultCount"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Filter Chips -->
+  <div class="active-filters hidden" id="activeFilters"></div>
+
+  <!-- Tabs -->
+  <div class="tabs hidden" id="tabBar">
+    <button class="tab-btn active" data-tab="jobs" onclick="switchTab('jobs')">
+      Jobs <span class="count" id="tabCountJobs">0</span>
+    </button>
+    <button class="tab-btn" data-tab="companies" onclick="switchTab('companies')">
+      Companies <span class="count" id="tabCountCompanies">0</span>
+    </button>
+    <button class="tab-btn" data-tab="hr" onclick="switchTab('hr')">
+      HR Contacts <span class="count" id="tabCountHR">0</span>
+    </button>
+    <button class="tab-btn" data-tab="hiring" onclick="switchTab('hiring')">
+      Hiring Signals <span class="count" id="tabCountHiring">0</span>
+    </button>
+    <button class="tab-btn" data-tab="consultants" onclick="switchTab('consultants')">
+      Consultants <span class="count" id="tabCountConsultants">0</span>
+    </button>
+    <button class="tab-btn" data-tab="firmposts" onclick="switchTab('firmposts')">
+      Firm Posts <span class="count" id="tabCountFirmPosts">0</span>
+    </button>
+  </div>
+
+
+  <!-- Table -->
+  <div class="table-wrapper hidden" id="tableWrapper">
+    <div class="table-scroll">
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="table-footer">
+      <span id="tableInfo">Showing 0 results</span>
+      <div class="pagination">
+        <button onclick="changePage(-1)" id="btnPrev" disabled>&laquo; Prev</button>
+        <span class="page-info" id="pageInfo">Page 1</span>
+        <button onclick="changePage(1)" id="btnNext" disabled>Next &raquo;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div id="emptyState" class="empty-state hidden">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4m-5 0v4m-4 0h8"/></svg>
+    <h3>No data for this tab</h3>
+    <p>Load the corresponding CSV file to see results here.</p>
+  </div>
+</div>
+
+<script>
+// ===================== STATE =====================
+const state = {
+  jobs: [],
+  summary: [],
+  hr: [],
+  hiring: [],
+  consultants: [],
+  firmposts: [],
+  activeTab: 'jobs',
+  page: 1,
+  perPage: 20,
+  sortCol: null,
+  sortAsc: true,
+  // Query builder filters
+  qRole: '',
+  qCompany: '',
+  qPlatform: '',
+  qLocation: '',
+  qSalary: '',
+  qExperience: '',
+  qWorkType: '',
+  qCompanyType: '',
+  qRoleType: '',
+  qSortBy: '',
+  qShortlist: '',
+  // Shortlist state — keys are "tab:uniqueKey", values are true
+  shortlisted: {},
+};
+
+// ===================== SHORTLIST =====================
+const SHORTLIST_KEY = 'jobhunter_shortlist';
+
+function loadShortlist() {
+  try {
+    const raw = localStorage.getItem(SHORTLIST_KEY);
+    if (raw) state.shortlisted = JSON.parse(raw);
+  } catch (e) { state.shortlisted = {}; }
+}
+
+function saveShortlist() {
+  try { localStorage.setItem(SHORTLIST_KEY, JSON.stringify(state.shortlisted)); }
+  catch (e) { /* quota exceeded — silent */ }
+}
+
+function getRowKey(tab, row) {
+  if (tab === 'jobs') return row.job_url || (row.company + '|' + row.title);
+  if (tab === 'companies') return row.company || '';
+  if (tab === 'hr') return row.linkedin_url || (row.company + '|' + row.hr_name);
+  if (tab === 'hiring' || tab === 'consultants') return row.linkedin_url || (row.name + '|' + row.company);
+  if (tab === 'firmposts') return row.post_url || (row.name + '|' + String(row.post_text || '').slice(0, 50));
+  return JSON.stringify(row).slice(0, 120);
+}
+
+function isShortlisted(tab, row) {
+  const key = tab + ':' + getRowKey(tab, row);
+  return state.shortlisted[key] === true;
+}
+
+function toggleShortlist(pageIndex) {
+  const config = TAB_CONFIG[state.activeTab];
+  const data = getFilteredData();
+  const start = (state.page - 1) * state.perPage;
+  const row = data[start + pageIndex];
+  if (!row) return;
+  const key = state.activeTab + ':' + getRowKey(state.activeTab, row);
+  if (state.shortlisted[key]) {
+    delete state.shortlisted[key];
+  } else {
+    state.shortlisted[key] = true;
+  }
+  saveShortlist();
+  renderTable();
+}
+
+function clearShortlist() {
+  // Clear only current tab's shortlisted items
+  const prefix = state.activeTab + ':';
+  Object.keys(state.shortlisted).forEach(k => {
+    if (k.startsWith(prefix)) delete state.shortlisted[k];
+  });
+  saveShortlist();
+  renderTable();
+}
+
+function getShortlistCount(tab) {
+  const prefix = tab + ':';
+  return Object.keys(state.shortlisted).filter(k => k.startsWith(prefix)).length;
+}
+
+function starCell(val, row, pageIdx) {
+  const starred = isShortlisted(state.activeTab, row);
+  return '<span class="star-btn ' + (starred ? 'starred' : '') + '" '
+    + 'onclick="event.stopPropagation();toggleShortlist(' + pageIdx + ')" '
+    + 'title="' + (starred ? 'Remove from shortlist' : 'Add to shortlist') + '">'
+    + '\u2605</span>';
+}
+
+// Load persisted shortlist on startup
+loadShortlist();
+
+// ===================== TAB DEFINITIONS =====================
+const TAB_CONFIG = {
+  jobs: {
+    columns: [
+      { key: '_star', label: '\u2606', render: starCell },
+      { key: 'platform', label: 'Platform', render: platformBadge },
+      { key: 'title', label: 'Title', render: (v, row) => jobLink(v, row.job_url) },
+      { key: 'company', label: 'Company' },
+      { key: 'company_type', label: 'Co. Type', render: typeBadge },
+      { key: 'role_type', label: 'Role Type', render: typeBadge },
+      { key: 'location', label: 'Location' },
+      { key: 'salary', label: 'Salary', render: salaryDisplay },
+      { key: 'experience_required', label: 'Exp. Req.' },
+      { key: 'date_posted', label: 'Posted' },
+      { key: 'role_summary', label: 'Summary', render: summaryCell },
+    ],
+    dataKey: 'jobs',
+  },
+  companies: {
+    columns: [
+      { key: '_star', label: '\u2606', render: starCell },
+      { key: 'company', label: 'Company' },
+      { key: 'total_openings', label: 'Openings', render: v => `<strong>${v || 0}</strong>` },
+      { key: 'roles', label: 'Roles', render: pipeTags },
+      { key: 'platforms', label: 'Platforms', render: platformTags },
+      { key: 'locations', label: 'Locations' },
+      { key: 'hr_contacts_found', label: 'HR Found', render: v => v > 0 ? `<span style="color:var(--success)">${v}</span>` : '<span style="color:var(--text-dim)">0</span>' },
+      { key: 'emails_found', label: 'Emails', render: v => v > 0 ? `<span style="color:var(--success)">${v}</span>` : '<span style="color:var(--text-dim)">0</span>' },
+    ],
+    dataKey: 'summary',
+  },
+  hr: {
+    columns: [
+      { key: '_star', label: '\u2606', render: starCell },
+      { key: 'company', label: 'Company' },
+      { key: 'hr_name', label: 'Name' },
+      { key: 'hr_title', label: 'Title' },
+      { key: 'linkedin_url', label: 'LinkedIn', render: linkedinLink },
+      { key: 'email', label: 'Email', render: emailDisplay },
+      { key: 'email_confidence', label: 'Confidence', render: confidenceBar },
+    ],
+    dataKey: 'hr',
+  },
+  hiring: {
+    columns: [
+      { key: '_star', label: '\u2606', render: starCell },
+      { key: 'name', label: 'Name' },
+      { key: 'title', label: 'Title' },
+      { key: 'company', label: 'Company', render: (v, row) => companyWithLink(v, row.company_linkedin_url) },
+      { key: 'location', label: 'Location' },
+      { key: 'linkedin_url', label: 'Profile', render: linkedinLink },
+      { key: 'email', label: 'Email', render: emailDisplay },
+      { key: 'phone', label: 'Phone' },
+      { key: 'headline', label: 'Hiring Signal', render: summaryCell },
+      { key: 'about', label: 'About', render: summaryCell },
+      { key: 'company_website', label: 'Website', render: websiteLink },
+      { key: 'company_industry', label: 'Industry' },
+      { key: 'company_size', label: 'Size' },
+      { key: 'search_keyword', label: 'Keyword' },
+    ],
+    dataKey: 'hiring',
+  },
+  consultants: {
+    columns: [
+      { key: '_star', label: '\u2606', render: starCell },
+      { key: 'name', label: 'Name' },
+      { key: 'title', label: 'Title' },
+      { key: 'company', label: 'Company', render: (v, row) => companyWithLink(v, row.company_linkedin_url) },
+      { key: 'location', label: 'Location' },
+      { key: 'linkedin_url', label: 'Profile', render: linkedinLink },
+      { key: 'email', label: 'Email', render: emailDisplay },
+      { key: 'phone', label: 'Phone' },
+      { key: 'consultant_type', label: 'Type', render: typeBadge },
+      { key: 'is_agency', label: 'Agency', render: boolBadge },
+      { key: 'headline', label: 'Headline', render: summaryCell },
+      { key: 'domains_served', label: 'Domains' },
+      { key: 'company_industry', label: 'Industry' },
+      { key: 'search_keyword', label: 'Keyword' },
+    ],
+    dataKey: 'consultants',
+  },
+  firmposts: {
+    columns: [
+      { key: '_star', label: '\u2606', render: starCell },
+      { key: 'name', label: 'Name' },
+      { key: 'title', label: 'Title' },
+      { key: 'recruiter_firm', label: 'Firm', render: typeBadge },
+      { key: 'company', label: 'Company' },
+      { key: 'location', label: 'Location' },
+      { key: 'linkedin_url', label: 'Profile', render: linkedinLink },
+      { key: 'hiring_for_role', label: 'Hiring For' },
+      { key: 'post_text', label: 'Post', render: summaryCell },
+      { key: 'post_url', label: 'Post Link', render: websiteLink },
+      { key: 'search_keyword', label: 'Keyword' },
+    ],
+    dataKey: 'firmposts',
+  },
+};
+
+// ===================== RENDERERS =====================
+function platformBadge(val) {
+  if (!val) return '';
+  const v = String(val).toLowerCase();
+  const platformMap = {
+    linkedin: 'LinkedIn', indeed: 'Indeed', naukri: 'Naukri',
+    cutshort: 'Cutshort', instahyre: 'Instahyre', wellfound: 'Wellfound',
+    iimjobs: 'IIMJobs', hirist: 'Hirist', weekday: 'Weekday',
+    crescendo: 'Crescendo', michaelpage: 'Michael Page', sutrahr: 'SutraHR',
+    antal: 'Antal', cielhr: 'CIEL HR', topgear: 'TopGear',
+    abcconsultants: 'ABC', kornferry: 'KornFerry',
+  };
+  let cls = '', label = val;
+  for (const [key, name] of Object.entries(platformMap)) {
+    if (v.includes(key)) { cls = key; label = name; break; }
+  }
+  return `<span class="badge badge-${cls}">${esc(label)}</span>`;
+}
+
+function jobLink(title, url) {
+  if (!title) return '';
+  if (url && String(url).startsWith('http')) {
+    return `<a class="link-btn" href="${esc(url)}" target="_blank" rel="noopener">${esc(title)}</a>`;
+  }
+  return esc(title);
+}
+
+function typeBadge(val) {
+  if (!val || val === 'nan' || val === 'Unknown' || val === 'General') return `<span style="color:var(--text-dim)">${esc(val || '-')}</span>`;
+  const colors = { B2B: '#3b82f6', B2C: '#8b5cf6', D2C: '#f97316', Mixed: '#6b7280', Growth: '#22c55e', Brand: '#ec4899' };
+  const c = colors[val] || 'var(--text-dim)';
+  return `<span class="badge" style="background:${c}22;color:${c}">${esc(val)}</span>`;
+}
+
+function summaryCell(val) {
+  if (!val || val === 'nan') return '';
+  const text = String(val);
+  if (text.length <= 80) return `<span style="font-size:12px">${esc(text)}</span>`;
+  return `<span style="font-size:12px;cursor:pointer" title="${esc(text)}">${esc(text.slice(0, 80))}…</span>`;
+}
+
+function linkedinLink(url) {
+  if (!url || !String(url).startsWith('http')) return '<span style="color:var(--text-dim)">-</span>';
+  return `<a class="link-btn" href="${esc(url)}" target="_blank" rel="noopener">View Profile</a>`;
+}
+
+function companyWithLink(name, url) {
+  if (!name || name === 'nan') return '<span style="color:var(--text-dim)">-</span>';
+  if (url && String(url).startsWith('http')) {
+    return `<a class="link-btn" href="${esc(url)}" target="_blank" rel="noopener">${esc(name)}</a>`;
+  }
+  return esc(name);
+}
+
+function websiteLink(url) {
+  if (!url || !String(url).startsWith('http')) return '<span style="color:var(--text-dim)">-</span>';
+  const display = url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+  return `<a class="link-btn" href="${esc(url)}" target="_blank" rel="noopener">${esc(display)}</a>`;
+}
+
+function emailDisplay(val) {
+  if (!val || val === 'nan' || val === '') return '<span style="color:var(--text-dim)">-</span>';
+  return `<a class="link-btn" href="mailto:${esc(val)}">${esc(val)}</a>`;
+}
+
+function confidenceBar(val) {
+  const n = parseInt(val);
+  if (isNaN(n) || n <= 0) return '<span style="color:var(--text-dim)">-</span>';
+  const color = n >= 80 ? 'var(--success)' : n >= 50 ? 'var(--warning)' : 'var(--danger)';
+  return `<span class="confidence-bar"><span class="fill" style="width:${n}%;background:${color}"></span></span>${n}%`;
+}
+
+function salaryDisplay(val) {
+  if (!val || val === 'nan' || val === 'NaN') return '<span style="color:var(--text-dim)">-</span>';
+  return esc(String(val));
+}
+
+function boolBadge(val) {
+  if (val === true || val === 'True' || val === 'true') return '<span style="color:var(--success)">Yes</span>';
+  return '';
+}
+
+function pipeTags(val) {
+  if (!val) return '';
+  return String(val).split('|').map(s => s.trim()).filter(Boolean)
+    .map(s => `<span style="display:inline-block;background:var(--surface2);padding:2px 8px;border-radius:12px;font-size:11px;margin:1px 2px">${esc(s)}</span>`)
+    .join(' ');
+}
+
+function platformTags(val) {
+  if (!val) return '';
+  return String(val).split(',').map(s => platformBadge(s.trim())).join(' ');
+}
+
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+// ===================== CSV LOADING =====================
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(files) {
+  for (const file of files) {
+    if (!file.name.endsWith('.csv')) continue;
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      dynamicTyping: true,
+      complete: result => {
+        const data = result.data;
+        const type = detectCSVType(data);
+        if (type === 'jobs') {
+          state.jobs = data;
+          document.getElementById('dotJobs').className = 'dot loaded';
+        } else if (type === 'summary') {
+          state.summary = data;
+          document.getElementById('dotSummary').className = 'dot loaded';
+        } else if (type === 'hr') {
+          state.hr = data;
+          document.getElementById('dotHR').className = 'dot loaded';
+        } else if (type === 'hiring') {
+          state.hiring = data;
+          document.getElementById('dotHiring').className = 'dot loaded';
+        } else if (type === 'consultants') {
+          state.consultants = data;
+          document.getElementById('dotConsultants').className = 'dot loaded';
+        } else if (type === 'firmposts') {
+          state.firmposts = data;
+          document.getElementById('dotFirmPosts').className = 'dot loaded';
+        }
+        updateUI();
+      }
+    });
+  }
+}
+
+function detectCSVType(data) {
+  if (!data || data.length === 0) return 'unknown';
+  const cols = Object.keys(data[0]);
+  // Order matters: more specific checks first
+  if (cols.includes('consultant_type') || cols.includes('is_agency') || cols.includes('domains_served')) return 'consultants';
+  if (cols.includes('recruiter_firm') || (cols.includes('post_text') && cols.includes('post_url'))) return 'firmposts';
+  if (cols.includes('headline') && cols.includes('search_keyword') && cols.includes('linkedin_url')) return 'hiring';
+  if (cols.includes('hr_name') || cols.includes('hr_title')) return 'hr';
+  if (cols.includes('total_openings') || cols.includes('roles')) return 'summary';
+  if (cols.includes('title') || cols.includes('job_url') || cols.includes('platform')) return 'jobs';
+  return 'unknown';
+}
+
+// ===================== AUTO-LOAD (server mode) =====================
+async function tryAutoLoad() {
+  // When served via `python main.py --dashboard`, load the latest CSV of each type
+  try {
+    const resp = await fetch('/api/files');
+    if (!resp.ok) return;
+    const files = await resp.json(); // sorted newest-first by server
+
+    // Pick only the first (newest) file matching each type
+    const toLoad = {};
+    for (const f of files) {
+      if (!toLoad.jobs && f.startsWith('jobs_')) toLoad.jobs = f;
+      else if (!toLoad.summary && f.startsWith('summary_')) toLoad.summary = f;
+      else if (!toLoad.hr && f.startsWith('hr_contacts_')) toLoad.hr = f;
+      else if (!toLoad.hiring && f.startsWith('hiring_signals_')) toLoad.hiring = f;
+      else if (!toLoad.consultants && f.startsWith('consultants_')) toLoad.consultants = f;
+      else if (!toLoad.firmposts && f.startsWith('firm_posts_')) toLoad.firmposts = f;
+    }
+
+    async function loadOne(filename, type) {
+      const csvResp = await fetch(`/output/${filename}`);
+      if (!csvResp.ok) return;
+      const text = await csvResp.text();
+      return new Promise(resolve => {
+        Papa.parse(text, {
+          header: true, skipEmptyLines: true, dynamicTyping: true,
+          complete: result => {
+            if (type === 'jobs') { state.jobs = result.data; document.getElementById('dotJobs').className = 'dot loaded'; }
+            else if (type === 'summary') { state.summary = result.data; document.getElementById('dotSummary').className = 'dot loaded'; }
+            else if (type === 'hr') { state.hr = result.data; document.getElementById('dotHR').className = 'dot loaded'; }
+            else if (type === 'hiring') { state.hiring = result.data; document.getElementById('dotHiring').className = 'dot loaded'; }
+            else if (type === 'consultants') { state.consultants = result.data; document.getElementById('dotConsultants').className = 'dot loaded'; }
+            else if (type === 'firmposts') { state.firmposts = result.data; document.getElementById('dotFirmPosts').className = 'dot loaded'; }
+            resolve();
+          }
+        });
+      });
+    }
+
+    const promises = [];
+    if (toLoad.jobs) promises.push(loadOne(toLoad.jobs, 'jobs'));
+    if (toLoad.summary) promises.push(loadOne(toLoad.summary, 'summary'));
+    if (toLoad.hr) promises.push(loadOne(toLoad.hr, 'hr'));
+    if (toLoad.hiring) promises.push(loadOne(toLoad.hiring, 'hiring'));
+    if (toLoad.consultants) promises.push(loadOne(toLoad.consultants, 'consultants'));
+    if (toLoad.firmposts) promises.push(loadOne(toLoad.firmposts, 'firmposts'));
+    await Promise.all(promises);
+    updateUI();
+  } catch (e) { /* Not in server mode, that's fine */ }
+}
+tryAutoLoad();
+
+// ===================== UI UPDATE =====================
+function updateUI() {
+  const hasData = state.jobs.length || state.summary.length || state.hr.length || state.hiring.length || state.consultants.length || state.firmposts.length;
+
+  document.getElementById('statsBar').classList.toggle('hidden', !hasData);
+  document.getElementById('tabBar').classList.toggle('hidden', !hasData);
+  document.getElementById('queryPanel').classList.toggle('hidden', !hasData);
+  document.getElementById('tableWrapper').classList.toggle('hidden', !hasData);
+
+  if (!hasData) return;
+
+  // Stats
+  const uniqueCompanies = new Set();
+  const uniquePlatforms = new Set();
+  state.jobs.forEach(j => {
+    if (j.company) uniqueCompanies.add(j.company);
+    if (j.platform) uniquePlatforms.add(String(j.platform).toLowerCase());
+  });
+
+  document.getElementById('statJobs').textContent = state.jobs.length;
+  document.getElementById('statCompanies').textContent = state.summary.length || uniqueCompanies.size;
+  document.getElementById('statPlatforms').textContent = uniquePlatforms.size || '-';
+  document.getElementById('statHR').textContent = state.hr.length;
+  document.getElementById('statEmails').textContent = state.hr.filter(h => h.email && h.email !== '' && h.email !== 'nan').length;
+
+  // Tab counts
+  document.getElementById('tabCountJobs').textContent = state.jobs.length;
+  document.getElementById('tabCountCompanies').textContent = state.summary.length;
+  document.getElementById('tabCountHR').textContent = state.hr.length;
+  document.getElementById('tabCountHiring').textContent = state.hiring.length;
+  document.getElementById('tabCountConsultants').textContent = state.consultants.length;
+  document.getElementById('tabCountFirmPosts').textContent = state.firmposts.length;
+
+  // Populate query panel platform dropdown from actual data
+  populateQueryPlatforms();
+  renderTable();
+}
+
+function populateQueryPlatforms() {
+  const platformSet = new Set();
+  state.jobs.forEach(row => {
+    if (row.platform) platformSet.add(String(row.platform).toLowerCase().trim());
+  });
+  const sel = document.getElementById('qPlatform');
+  const curVal = sel.value;
+  sel.innerHTML = '<option value="">All Platforms</option>';
+  [...platformSet].sort().forEach(p => {
+    const label = p.charAt(0).toUpperCase() + p.slice(1);
+    sel.innerHTML += `<option value="${esc(p)}">${esc(label)}</option>`;
+  });
+  sel.value = curVal;
+}
+
+// Salary parsing helpers
+function parseSalaryNumber(salary, minAmt, maxAmt, currency) {
+  // Try numeric columns first (python-jobspy provides min_amount/max_amount)
+  if (minAmt && !isNaN(Number(minAmt))) return { amount: Number(minAmt), currency: currency || 'USD' };
+  if (maxAmt && !isNaN(Number(maxAmt))) return { amount: Number(maxAmt), currency: currency || 'USD' };
+  if (!salary || salary === 'nan' || salary === 'NaN') return null;
+  const s = String(salary);
+
+  // Indian formats: "30-50 Lacs", "₹30L", "10 LPA"
+  const lacMatch = s.match(/([\d,.]+)\s*[-–to]*\s*([\d,.]*)\s*(Lacs?|Lakhs?|LPA|L)/i);
+  if (lacMatch) {
+    const high = lacMatch[2] ? parseFloat(lacMatch[2].replace(/,/g, '')) : parseFloat(lacMatch[1].replace(/,/g, ''));
+    return { amount: high, currency: 'INR_LAC' };
+  }
+  // Cr format
+  const crMatch = s.match(/([\d,.]+)\s*[-–to]*\s*([\d,.]*)\s*Cr/i);
+  if (crMatch) {
+    const high = crMatch[2] ? parseFloat(crMatch[2].replace(/,/g, '')) : parseFloat(crMatch[1].replace(/,/g, ''));
+    return { amount: high * 100, currency: 'INR_LAC' }; // normalize to lacs
+  }
+  // USD/general: "$100,000" or "100000"
+  const usdMatch = s.match(/[\$]?\s*([\d,]+(?:\.\d+)?)\s*(?:[-–to]+\s*[\$]?\s*([\d,]+(?:\.\d+)?))?/);
+  if (usdMatch) {
+    const high = usdMatch[2] ? parseFloat(usdMatch[2].replace(/,/g, '')) : parseFloat(usdMatch[1].replace(/,/g, ''));
+    if (!isNaN(high) && high > 0) return { amount: high, currency: 'USD' };
+  }
+  return null;
+}
+
+function getSalaryBracket(salary, minAmt, maxAmt, currency) {
+  const parsed = parseSalaryNumber(salary, minAmt, maxAmt, currency);
+  if (!parsed) return null;
+  const { amount, currency: cur } = parsed;
+  if (cur === 'INR_LAC') {
+    if (amount < 5) return 'Under 5L';
+    if (amount <= 10) return '5L - 10L';
+    if (amount <= 20) return '10L - 20L';
+    if (amount <= 50) return '20L - 50L';
+    if (amount <= 100) return '50L - 1Cr';
+    return '1Cr+';
+  }
+  // USD or other
+  if (amount < 50000) return 'Under $50K';
+  if (amount <= 100000) return '$50K - $100K';
+  if (amount <= 150000) return '$100K - $150K';
+  if (amount <= 200000) return '$150K - $200K';
+  return '$200K+';
+}
+
+function parseExperienceYears(exp) {
+  if (!exp || exp === 'nan') return null;
+  const s = String(exp);
+  // "10-15 Yrs", "10+ years", "5 years", "3 to 5 yrs"
+  const match = s.match(/(\d+)\s*[-–+to]*\s*(\d*)\s*(?:Yrs?|years?)/i);
+  if (match) {
+    const low = parseInt(match[1]);
+    const high = match[2] ? parseInt(match[2]) : low;
+    return { low, high };
+  }
+  // Plain number
+  const numMatch = s.match(/(\d+)/);
+  if (numMatch) return { low: parseInt(numMatch[1]), high: parseInt(numMatch[1]) };
+  return null;
+}
+
+// ===================== TABS =====================
+function switchTab(tab) {
+  state.activeTab = tab;
+  state.page = 1;
+  state.sortCol = null;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  renderTable();
+}
+
+// ===================== QUERY BUILDER =====================
+function toggleQueryPanel() {
+  document.getElementById('queryPanel').classList.toggle('open');
+}
+
+// Detect work type from job row (mirrors query.py logic)
+function detectWorkType(row) {
+  const isRemote = row.is_remote;
+  if (isRemote === true || String(isRemote).toLowerCase() === 'true') return 'remote';
+  const text = [row.title, row.location, row.description].map(v => String(v || '')).join(' ').toLowerCase();
+  if (text.includes('hybrid')) return 'hybrid';
+  if (text.includes('remote') || text.includes('work from home') || text.includes('wfh')) return 'remote';
+  return 'onsite';
+}
+
+// India meta-location keywords (matches query.py)
+const INDIA_CITIES = [
+  'india', 'bangalore', 'bengaluru', 'mumbai', 'delhi', 'new delhi', 'hyderabad', 'chennai',
+  'pune', 'kolkata', 'noida', 'gurgaon', 'gurugram', 'ahmedabad', 'jaipur', 'kochi', 'lucknow',
+  'indore', 'chandigarh', 'bhopal', 'coimbatore', 'thiruvananthapuram', 'guwahati', 'vadodara',
+  'rajkot', 'udaipur', 'meerut', 'gwalior', 'dehradun', 'siliguri', 'navi mumbai', 'thane',
+  'karnataka', 'maharashtra', 'telangana', 'tamil nadu', 'kerala', 'haryana', 'uttar pradesh',
+  'rajasthan', 'gujarat', 'madhya pradesh', 'andhra pradesh', 'goa', 'mundra', 'sarita vihar',
+  'bawana', 'serilingampalli', 'keesara', 'aurangabad', 'south west delhi',
+];
+
+function runQuery() {
+  // Read all query fields into state
+  state.qRole = document.getElementById('qRole').value.trim().toLowerCase();
+  state.qCompany = document.getElementById('qCompany').value.trim().toLowerCase();
+  state.qPlatform = document.getElementById('qPlatform').value.toLowerCase();
+  state.qLocation = document.getElementById('qLocation').value.trim().toLowerCase();
+  state.qSalary = document.getElementById('qSalary').value;
+  state.qExperience = document.getElementById('qExperience').value;
+  state.qWorkType = document.getElementById('qWorkType').value.toLowerCase();
+  state.qCompanyType = document.getElementById('qCompanyType').value;
+  state.qRoleType = document.getElementById('qRoleType').value;
+  state.qSortBy = document.getElementById('qSortBy').value;
+  state.qShortlist = document.getElementById('qShortlist').value;
+
+  // Apply sort
+  if (state.qSortBy) {
+    const [key, dir] = state.qSortBy.split('-');
+    const config = TAB_CONFIG[state.activeTab];
+    const colIdx = config.columns.findIndex(c => c.key === key);
+    if (colIdx >= 0) {
+      state.sortCol = colIdx;
+      state.sortAsc = dir === 'asc';
+    }
+  } else {
+    state.sortCol = null;
+    state.sortAsc = true;
+  }
+
+  state.page = 1;
+  updateFilterChips();
+  renderTable();
+}
+
+function clearQuery() {
+  document.getElementById('qRole').value = '';
+  document.getElementById('qCompany').value = '';
+  document.getElementById('qPlatform').value = '';
+  document.getElementById('qLocation').value = '';
+  document.getElementById('qSalary').value = '';
+  document.getElementById('qExperience').value = '';
+  document.getElementById('qWorkType').value = '';
+  document.getElementById('qCompanyType').value = '';
+  document.getElementById('qRoleType').value = '';
+  document.getElementById('qSortBy').value = '';
+  document.getElementById('qShortlist').value = '';
+  state.qRole = '';
+  state.qCompany = '';
+  state.qPlatform = '';
+  state.qLocation = '';
+  state.qSalary = '';
+  state.qExperience = '';
+  state.qWorkType = '';
+  state.qCompanyType = '';
+  state.qRoleType = '';
+  state.qSortBy = '';
+  state.qShortlist = '';
+  state.sortCol = null;
+  state.sortAsc = true;
+  state.page = 1;
+  document.getElementById('activeFilters').innerHTML = '';
+  document.getElementById('activeFilters').classList.add('hidden');
+  document.getElementById('queryResultCount').textContent = '';
+  renderTable();
+}
+
+function removeQueryFilter(field) {
+  document.getElementById(field).value = '';
+  runQuery();
+}
+
+function updateFilterChips() {
+  const chips = [];
+  const fields = [
+    { id: 'qRole', label: 'Role', value: state.qRole },
+    { id: 'qCompany', label: 'Company', value: state.qCompany },
+    { id: 'qPlatform', label: 'Platform', value: state.qPlatform },
+    { id: 'qLocation', label: 'Location', value: state.qLocation },
+    { id: 'qSalary', label: 'Salary', value: state.qSalary },
+    { id: 'qExperience', label: 'Experience', value: state.qExperience },
+    { id: 'qWorkType', label: 'Work Type', value: state.qWorkType },
+    { id: 'qCompanyType', label: 'Co. Type', value: state.qCompanyType },
+    { id: 'qRoleType', label: 'Role Type', value: state.qRoleType },
+    { id: 'qSortBy', label: 'Sort', value: state.qSortBy ? state.qSortBy.replace('-', ' ') : '' },
+    { id: 'qShortlist', label: 'Shortlist', value: state.qShortlist === 'yes' ? 'Shortlisted Only' : state.qShortlist === 'no' ? 'Not Shortlisted' : '' },
+  ];
+
+  fields.forEach(f => {
+    if (f.value) {
+      chips.push(`<span class="filter-chip"><span class="chip-label">${f.label}:</span> ${esc(f.value)} <span class="chip-close" onclick="removeQueryFilter('${f.id}')">&times;</span></span>`);
+    }
+  });
+
+  const container = document.getElementById('activeFilters');
+  container.innerHTML = chips.join('');
+  container.classList.toggle('hidden', chips.length === 0);
+}
+
+function getFilteredData() {
+  const config = TAB_CONFIG[state.activeTab];
+  let data = [...state[config.dataKey]];
+
+  // Role / title filter
+  if (state.qRole) {
+    data = data.filter(row => {
+      const title = String(row.title || '').toLowerCase();
+      return title.includes(state.qRole);
+    });
+  }
+
+  // Company filter
+  if (state.qCompany) {
+    data = data.filter(row => {
+      const company = String(row.company || '').toLowerCase();
+      return company.includes(state.qCompany);
+    });
+  }
+
+  // Platform filter
+  if (state.qPlatform) {
+    data = data.filter(row => {
+      const p = String(row.platform || row.platforms || '').toLowerCase();
+      return p.includes(state.qPlatform);
+    });
+  }
+
+  // Location filter (supports "India" as meta-location)
+  if (state.qLocation) {
+    if (state.qLocation === 'india') {
+      data = data.filter(row => {
+        const loc = String(row.location || row.locations || '').toLowerCase();
+        return INDIA_CITIES.some(c => loc.includes(c));
+      });
+    } else {
+      data = data.filter(row => {
+        const loc = String(row.location || row.locations || '').toLowerCase();
+        return loc.includes(state.qLocation);
+      });
+    }
+  }
+
+  // Salary bracket filter
+  if (state.qSalary) {
+    data = data.filter(row => {
+      const bracket = getSalaryBracket(row.salary, row.min_amount, row.max_amount, row.currency);
+      return bracket === state.qSalary;
+    });
+  }
+
+  // Experience range filter
+  if (state.qExperience) {
+    data = data.filter(row => {
+      const exp = parseExperienceYears(row.experience);
+      if (!exp) return false;
+      if (state.qExperience === '16+') return exp.low >= 16 || exp.high >= 16;
+      const [rLow, rHigh] = state.qExperience.split('-').map(Number);
+      return exp.low <= rHigh && exp.high >= rLow;
+    });
+  }
+
+  // Work type filter (remote / hybrid / onsite)
+  if (state.qWorkType) {
+    data = data.filter(row => detectWorkType(row) === state.qWorkType);
+  }
+
+  // Company type filter (B2B / B2C / D2C / Mixed)
+  if (state.qCompanyType) {
+    data = data.filter(row => String(row.company_type || '').toUpperCase() === state.qCompanyType.toUpperCase());
+  }
+
+  // Role type filter (B2B / B2C / D2C / Growth / Brand)
+  if (state.qRoleType) {
+    data = data.filter(row => String(row.role_type || '').toUpperCase() === state.qRoleType.toUpperCase());
+  }
+
+  // Shortlist filter
+  if (state.qShortlist === 'yes') {
+    data = data.filter(row => isShortlisted(state.activeTab, row));
+  } else if (state.qShortlist === 'no') {
+    data = data.filter(row => !isShortlisted(state.activeTab, row));
+  }
+
+  // Sort
+  if (state.sortCol !== null) {
+    const key = config.columns[state.sortCol].key;
+    data.sort((a, b) => {
+      let va = a[key], vb = b[key];
+      if (va == null) va = '';
+      if (vb == null) vb = '';
+      if (typeof va === 'number' && typeof vb === 'number') return state.sortAsc ? va - vb : vb - va;
+      return state.sortAsc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+    });
+  }
+
+  // Update result count in query panel
+  const totalInTab = state[config.dataKey].length;
+  const hasAnyFilter = state.qRole || state.qCompany || state.qPlatform || state.qLocation || state.qSalary || state.qExperience || state.qWorkType || state.qCompanyType || state.qRoleType || state.qShortlist;
+  const countEl = document.getElementById('queryResultCount');
+  if (hasAnyFilter) {
+    countEl.innerHTML = `<strong>${data.length}</strong> of ${totalInTab} matched`;
+  } else {
+    countEl.textContent = '';
+  }
+
+  return data;
+}
+
+// ===================== RENDERING =====================
+function renderTable() {
+  const config = TAB_CONFIG[state.activeTab];
+  const data = getFilteredData();
+
+  // Show empty state if no data for this tab
+  const hasTabData = state[config.dataKey].length > 0;
+  document.getElementById('emptyState').classList.toggle('hidden', hasTabData);
+  document.getElementById('tableWrapper').classList.toggle('hidden', !hasTabData);
+  if (!hasTabData) return;
+
+  // Header
+  const thead = document.getElementById('tableHead');
+  thead.innerHTML = '<tr>' + config.columns.map((col, i) => {
+    let arrow = '';
+    if (state.sortCol === i) arrow = `<span class="sort-arrow">${state.sortAsc ? '&#9650;' : '&#9660;'}</span>`;
+    return `<th onclick="sortBy(${i})">${col.label}${arrow}</th>`;
+  }).join('') + '</tr>';
+
+  // Body (paginated)
+  const start = (state.page - 1) * state.perPage;
+  const pageData = data.slice(start, start + state.perPage);
+  const tbody = document.getElementById('tableBody');
+
+  if (pageData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${config.columns.length}" style="text-align:center;padding:40px;color:var(--text-dim)">No matching results</td></tr>`;
+  } else {
+    tbody.innerHTML = pageData.map((row, pageIdx) => {
+      return '<tr>' + config.columns.map(col => {
+        const val = row[col.key];
+        const rendered = col.render ? col.render(val, row, pageIdx) : esc(val != null && val !== 'nan' ? val : '');
+        return `<td>${rendered}</td>`;
+      }).join('') + '</tr>';
+    }).join('');
+  }
+
+  // Footer
+  const totalPages = Math.max(1, Math.ceil(data.length / state.perPage));
+  const slCount = getShortlistCount(state.activeTab);
+  const slText = slCount ? ` | ${slCount} shortlisted` : '';
+  document.getElementById('tableInfo').textContent = `Showing ${data.length} of ${state[config.dataKey].length} results${slText}`;
+  document.getElementById('pageInfo').textContent = `Page ${state.page} of ${totalPages}`;
+  document.getElementById('btnPrev').disabled = state.page <= 1;
+  document.getElementById('btnNext').disabled = state.page >= totalPages;
+}
+
+function sortBy(colIndex) {
+  if (state.sortCol === colIndex) {
+    state.sortAsc = !state.sortAsc;
+  } else {
+    state.sortCol = colIndex;
+    state.sortAsc = true;
+  }
+  renderTable();
+}
+
+function changePage(delta) {
+  const config = TAB_CONFIG[state.activeTab];
+  const data = getFilteredData();
+  const totalPages = Math.ceil(data.length / state.perPage);
+  state.page = Math.max(1, Math.min(totalPages, state.page + delta));
+  renderTable();
+}
+
+// ===================== EXPORT =====================
+function exportCurrentView() {
+  const config = TAB_CONFIG[state.activeTab];
+  const data = getFilteredData();
+  if (!data.length) return;
+
+  // Skip the _star column, add a 'shortlisted' column instead
+  const exportCols = config.columns.filter(c => c.key !== '_star');
+  const headers = [...exportCols.map(c => c.key), 'shortlisted'];
+  const rows = data.map(row => {
+    const vals = exportCols.map(col => {
+      const v = row[col.key];
+      if (v == null) return '';
+      const s = String(v);
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+    });
+    vals.push(isShortlisted(state.activeTab, row) ? 'Yes' : '');
+    return vals.join(',');
+  });
+
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${state.activeTab}_export.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===================== SCRAPE BUILDER =====================
+const scrapeKeywords = [];
+const scrapeLocations = [];
+
+function initTagInput(inputId, wrapperId, tagArray) {
+  const input = document.getElementById(inputId);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = input.value.trim().replace(/,$/,'');
+      if (val && !tagArray.includes(val)) {
+        tagArray.push(val);
+        renderTags(wrapperId, tagArray);
+      }
+      input.value = '';
+    }
+    if (e.key === 'Backspace' && input.value === '' && tagArray.length) {
+      tagArray.pop();
+      renderTags(wrapperId, tagArray);
+    }
+  });
+}
+
+function renderTags(wrapperId, tagArray) {
+  const wrap = document.getElementById(wrapperId);
+  wrap.querySelectorAll('.scrape-tag').forEach(t => t.remove());
+  const input = wrap.querySelector('input');
+  tagArray.forEach((tag, i) => {
+    const span = document.createElement('span');
+    span.className = 'scrape-tag';
+    span.innerHTML = `${esc(tag)} <span class="tag-remove" onclick="event.stopPropagation();removeTag('${wrapperId}',${i})">&times;</span>`;
+    wrap.insertBefore(span, input);
+  });
+}
+
+function removeTag(wrapperId, index) {
+  const arr = wrapperId === 'scrapeKeywordsWrap' ? scrapeKeywords : scrapeLocations;
+  arr.splice(index, 1);
+  renderTags(wrapperId, arr);
+}
+
+initTagInput('scrapeKeywordInput', 'scrapeKeywordsWrap', scrapeKeywords);
+initTagInput('scrapeLocationInput', 'scrapeLocationsWrap', scrapeLocations);
+
+function toggleScrapePanel() {
+  document.getElementById('scrapePanel').classList.toggle('open');
+}
+
+function loadScrapeDefaults() {
+  loadDefaultKeywords();
+  loadDefaultLocations();
+  document.getElementById('scrapeMaxResults').value = 50;
+  document.getElementById('scrapeHoursOld').value = 168;
+
+  // Reset platform checkboxes
+  const defaultOn = ['linkedin','indeed','naukri','cutshort','instahyre','iimjobs','hirist','weekday'];
+  document.querySelectorAll('#platformMultiSelect input[data-platform]').forEach(cb => {
+    cb.checked = defaultOn.includes(cb.dataset.platform);
+  });
+  updatePlatformSummary();
+
+  // Reset signal toggles
+  document.getElementById('scrapeFindHiring').checked = false;
+  document.getElementById('scrapeFindPosts').checked = false;
+  document.getElementById('scrapeFindConsultants').checked = false;
+  document.getElementById('scrapeConsultantsBroad').checked = false;
+  document.getElementById('scrapeFindFirmPosts').checked = false;
+  document.getElementById('scrapeTargetCompanies').checked = false;
+  document.getElementById('scrapeFindHR').checked = false;
+  document.getElementById('scrapeEnrichEmails').checked = false;
+}
+
+function loadDefaultKeywords() {
+  scrapeKeywords.length = 0;
+  ['Marketing Director','Head of Marketing','Director of Marketing',
+   'VP Marketing','Head of Growth','Director of Growth',
+   'Head of Digital Marketing','Head of Brand Marketing',
+   'Head of Product Marketing','Marketing Lead',
+   'Growth Marketing Lead','Senior Marketing Manager'
+  ].forEach(k => scrapeKeywords.push(k));
+  renderTags('scrapeKeywordsWrap', scrapeKeywords);
+}
+
+function loadDefaultLocations() {
+  scrapeLocations.length = 0;
+  ['India','Bangalore','Mumbai','Delhi','Hyderabad','Pune','Remote'
+  ].forEach(l => scrapeLocations.push(l));
+  renderTags('scrapeLocationsWrap', scrapeLocations);
+}
+
+function gatherScrapeConfig() {
+  // Auto-commit any uncommitted text in the tag inputs
+  const kwInput = document.getElementById('scrapeKeywordInput');
+  const locInput = document.getElementById('scrapeLocationInput');
+  if (kwInput.value.trim()) {
+    scrapeKeywords.push(kwInput.value.trim());
+    kwInput.value = '';
+    renderTags('scrapeKeywordsWrap', scrapeKeywords);
+  }
+  if (locInput.value.trim()) {
+    scrapeLocations.push(locInput.value.trim());
+    locInput.value = '';
+    renderTags('scrapeLocationsWrap', scrapeLocations);
+  }
+
+  // Read platforms from multi-select checkboxes
+  const platforms = [];
+  document.querySelectorAll('#platformMultiSelect input[data-platform]:checked').forEach(cb => {
+    platforms.push(cb.dataset.platform);
+  });
+
+  return {
+    keywords: [...scrapeKeywords],
+    locations: [...scrapeLocations],
+    platforms,
+    max_results: parseInt(document.getElementById('scrapeMaxResults').value) || 50,
+    hours_old: parseInt(document.getElementById('scrapeHoursOld').value) || 168,
+    find_hiring: document.getElementById('scrapeFindHiring').checked,
+    find_posts: document.getElementById('scrapeFindPosts').checked,
+    find_consultants: document.getElementById('scrapeFindConsultants').checked,
+    consultants_broad: document.getElementById('scrapeConsultantsBroad').checked,
+    find_firm_posts: document.getElementById('scrapeFindFirmPosts').checked,
+    target_companies: document.getElementById('scrapeTargetCompanies').checked,
+    find_hr: document.getElementById('scrapeFindHR').checked,
+    enrich_emails: document.getElementById('scrapeEnrichEmails').checked,
+  };
+}
+
+let scrapePoller = null;
+
+async function startScrape() {
+  const config = gatherScrapeConfig();
+  if (!config.keywords.length) { alert('Add at least one keyword / job title.'); return; }
+  if (!config.platforms.length) { alert('Select at least one platform.'); return; }
+
+  setScrapeStatus('running');
+  document.getElementById('scrapeStartBtn').disabled = true;
+  document.getElementById('scrapeStopBtn').style.display = '';
+  const logEl = document.getElementById('scrapeLog');
+  logEl.classList.remove('hidden');
+  logEl.innerHTML = '';
+  document.getElementById('scrapeOutputFiles').classList.add('hidden');
+
+  try {
+    const resp = await fetch('/api/scrape', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(config),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      setScrapeStatus('error');
+      appendScrapeLog('Error: ' + (data.error || 'Failed to start'), 'error');
+      document.getElementById('scrapeStartBtn').disabled = false;
+      document.getElementById('scrapeStopBtn').style.display = 'none';
+      return;
+    }
+  } catch (e) {
+    setScrapeStatus('error');
+    appendScrapeLog('Network error: ' + e.message, 'error');
+    document.getElementById('scrapeStartBtn').disabled = false;
+    document.getElementById('scrapeStopBtn').style.display = 'none';
+    return;
+  }
+
+  // Poll for status
+  let lastLineCount = 0;
+  scrapePoller = setInterval(async () => {
+    try {
+      const resp = await fetch('/api/scrape/status');
+      const data = await resp.json();
+
+      // Append new log lines
+      if (data.log_count > lastLineCount) {
+        data.log_lines.slice(lastLineCount).forEach(line => appendScrapeLog(line));
+        lastLineCount = data.log_count;
+      }
+
+      // Terminal states
+      if (data.status === 'completed' || data.status === 'error') {
+        clearInterval(scrapePoller);
+        scrapePoller = null;
+        setScrapeStatus(data.status);
+        document.getElementById('scrapeStartBtn').disabled = false;
+        document.getElementById('scrapeStopBtn').style.display = 'none';
+
+        if (data.output_files && data.output_files.length) {
+          const container = document.getElementById('scrapeOutputFiles');
+          container.innerHTML = data.output_files.map(f =>
+            `<span class="scrape-output-file">&#128196; ${esc(f)}</span>`
+          ).join('');
+          container.classList.remove('hidden');
+        }
+
+        if (data.status === 'completed') {
+          appendScrapeLog('--- Reloading dashboard data... ---', 'success');
+          await tryAutoLoad();
+          appendScrapeLog('Dashboard data refreshed!', 'success');
+        }
+      }
+    } catch (e) { /* keep polling */ }
+  }, 1500);
+}
+
+async function stopScrapeUI() {
+  if (scrapePoller) { clearInterval(scrapePoller); scrapePoller = null; }
+  try { await fetch('/api/scrape/cancel', { method: 'POST' }); } catch (e) { /* ok */ }
+  setScrapeStatus('idle');
+  appendScrapeLog('Scrape cancelled by user.', 'error');
+  document.getElementById('scrapeStartBtn').disabled = false;
+  document.getElementById('scrapeStopBtn').style.display = 'none';
+}
+
+function setScrapeStatus(status) {
+  const badge = document.getElementById('scrapeStatusBadge');
+  badge.className = 'scrape-status st-' + status;
+  const labels = {idle:'Idle', running:'Running...', completed:'Completed', error:'Error'};
+  document.getElementById('scrapeStatusText').textContent = labels[status] || status;
+}
+
+function appendScrapeLog(line, type) {
+  const log = document.getElementById('scrapeLog');
+  const div = document.createElement('div');
+  if (!type) {
+    const lower = line.toLowerCase();
+    if (lower.includes('error') || lower.includes('failed') || lower.includes('traceback')) type = 'error';
+    else if (lower.includes('found') || lower.includes('exported') || lower.includes('done')) type = 'success';
+    else if (line.startsWith('===') || line.startsWith('---') || line.startsWith('  [')) type = 'info';
+  }
+  if (type) div.className = 'log-' + type;
+  div.textContent = line;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ===================== MULTI-SELECT & CATEGORIES =====================
+function toggleMultiSelect(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+// Close multi-select on outside click
+document.addEventListener('click', e => {
+  document.querySelectorAll('.multi-select.open').forEach(ms => {
+    if (!ms.contains(e.target)) ms.classList.remove('open');
+  });
+});
+
+function updatePlatformSummary() {
+  const all = document.querySelectorAll('#platformMultiSelect input[data-platform]');
+  const checked = document.querySelectorAll('#platformMultiSelect input[data-platform]:checked');
+  document.getElementById('platformSummary').textContent =
+    checked.length === all.length ? `All ${all.length} platforms` :
+    checked.length === 0 ? 'None selected' :
+    `${checked.length} of ${all.length} selected`;
+}
+
+function toggleGroupPlatforms(group) {
+  const boxes = document.querySelectorAll(`#platformMultiSelect input[data-group="${group}"]`);
+  const allChecked = [...boxes].every(cb => cb.checked);
+  boxes.forEach(cb => cb.checked = !allChecked);
+  updatePlatformSummary();
+}
+
+function toggleCategory(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// Initialize platform summary on load
+updatePlatformSummary();
+
+// ===================== KEYBOARD SHORTCUTS =====================
+// Enter key on text inputs triggers Run Query
+['qRole', 'qCompany', 'qLocation'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); runQuery(); }
+  });
+});
+// Select changes auto-trigger Run Query
+['qPlatform', 'qSalary', 'qExperience', 'qWorkType', 'qCompanyType', 'qRoleType', 'qSortBy'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => runQuery());
+});
+</script>
+</body>
+</html>

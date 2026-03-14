@@ -1,0 +1,30 @@
+# Environment & secrets
+.env
+
+# LinkedIn session cookies (sensitive!)
+.session/
+
+# Scraped output CSVs (regeneratable)
+output/*.csv
+output/*.html
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS junk
+.DS_Store
+Thumbs.db
+Desktop.ini
+nul
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude internal
+.claude/
+.playwright-mcp/

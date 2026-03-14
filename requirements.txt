@@ -1,0 +1,8 @@
+python-jobspy>=1.1.0
+httpx[http2]
+beautifulsoup4
+lxml
+playwright
+pyhunter
+python-dotenv
+pandas
