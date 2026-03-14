@@ -48,6 +48,12 @@ def enrich_jobs(df: pd.DataFrame) -> pd.DataFrame:
 
     df["role_summary"] = df.apply(_generate_summary, axis=1)
 
+    # Salary normalization (before relevance scoring so it can use parsed values)
+    salary_parsed = df["salary"].apply(_normalize_salary)
+    df["salary_min_lpa"] = salary_parsed.apply(lambda t: t[0])
+    df["salary_max_lpa"] = salary_parsed.apply(lambda t: t[1])
+    df["salary_normalized"] = salary_parsed.apply(lambda t: t[2])
+
     # Relevance scoring (0-100)
     df["relevance_score"] = df.apply(_compute_relevance_score, axis=1)
 
@@ -251,6 +257,195 @@ def _extract_experience_range(row) -> tuple:
                 return (val, None) if "+" in m.group(0) else (val, val)
 
     return (None, None)
+
+
+# ── Salary normalization ────────────────────────────────────────────
+
+def _normalize_salary(raw) -> tuple:
+    """Parse Indian salary strings into structured (min_lpa, max_lpa, display).
+
+    Handles formats like:
+        "₹15-20 LPA"           → (15.0, 20.0, "15-20 LPA")
+        "15L"                   → (15.0, 15.0, "15 LPA")
+        "15 - 20 Lakhs"        → (15.0, 20.0, "15-20 LPA")
+        "Rs 25-35 Lacs"        → (25.0, 35.0, "25-35 LPA")
+        "₹ 12,00,000 - 18,00,000"  → (12.0, 18.0, "12-18 LPA")
+        "₹ 12,00,000 - 18,00,000 per annum" → (12.0, 18.0, "12-18 LPA")
+        "20,00,000"             → (20.0, 20.0, "20 LPA")
+        "1500000-2500000"       → (15.0, 25.0, "15-25 LPA")
+        "Rs6-8.5 Lacs"          → (6.0, 8.5, "6-8.5 LPA")
+        "Not disclosed"         → (None, None, "")
+        "Competitive"           → (None, None, "")
+        "50000-80000 per month" → (6.0, 9.6, "6-9.6 LPA")
+        "80000/month"           → (9.6, 9.6, "9.6 LPA")
+        "50K-80K per month"     → (6.0, 9.6, "6-9.6 LPA")
+
+    Returns:
+        (min_lpa: float|None, max_lpa: float|None, display: str)
+    """
+    if not raw or str(raw).strip().lower() in ("", "nan", "none", "not disclosed",
+                                                 "competitive", "confidential",
+                                                 "as per industry", "best in industry",
+                                                 "-"):
+        return (None, None, "")
+
+    text = str(raw).strip()
+    original = text
+
+    # Clean: remove currency symbols, "Rs", "INR" prefix
+    text = re.sub(r"[₹$]", "", text)
+    text = re.sub(r"(?i)^(rs\.?|inr)\s*", "", text)
+    text = text.strip()
+
+    is_monthly = bool(re.search(r"(?i)(per\s*month|/\s*month|p\.?\s*m\.?|monthly)", text))
+    is_annual = bool(re.search(r"(?i)(per\s*annum|p\.?\s*a\.?|annual|yearly|/\s*year)", text))
+
+    # Strip period indicators for number parsing
+    text = re.sub(r"(?i)\s*(per\s*month|/\s*month|p\.?\s*m\.?|monthly|per\s*annum|p\.?\s*a\.?|annual|yearly|/\s*year)\s*$", "", text).strip()
+
+    min_lpa = None
+    max_lpa = None
+
+    # ── Pattern 1: Indian comma format range "12,00,000 - 18,00,000" ──
+    m = re.search(r"([\d,]+(?:,\d{2,3}){1,3})\s*[-–—to]+\s*([\d,]+(?:,\d{2,3}){1,3})", text)
+    if m:
+        v1 = _indian_number_to_float(m.group(1))
+        v2 = _indian_number_to_float(m.group(2))
+        if v1 is not None and v2 is not None:
+            min_lpa, max_lpa = _to_lpa(v1, is_monthly), _to_lpa(v2, is_monthly)
+            return _format_salary_result(min_lpa, max_lpa)
+
+    # ── Pattern 2: Indian comma format single "12,00,000" ──
+    m = re.match(r"^([\d,]+(?:,\d{2,3}){1,3})\s*$", text.split('-')[0].strip() if '-' not in text else "")
+    if not m:
+        m = re.match(r"^([\d,]+(?:,\d{2,3}){1,3})\s*$", text)
+    if m:
+        v = _indian_number_to_float(m.group(1))
+        if v is not None:
+            lpa = _to_lpa(v, is_monthly)
+            return _format_salary_result(lpa, lpa)
+
+    # ── Pattern 3: "50K-80K" (thousands) ──
+    m = re.search(r"([\d.]+)\s*[kK]\s*[-–—to]+\s*([\d.]+)\s*[kK]", text)
+    if m:
+        try:
+            v1 = float(m.group(1)) * 1000
+            v2 = float(m.group(2)) * 1000
+            min_lpa = _to_lpa(v1, is_monthly)
+            max_lpa = _to_lpa(v2, is_monthly)
+            return _format_salary_result(min_lpa, max_lpa)
+        except ValueError:
+            pass
+
+    # ── Pattern 4: Single "80K" ──
+    m = re.search(r"([\d.]+)\s*[kK](?:\s|$)", text)
+    if m:
+        try:
+            v = float(m.group(1)) * 1000
+            lpa = _to_lpa(v, is_monthly)
+            return _format_salary_result(lpa, lpa)
+        except ValueError:
+            pass
+
+    # ── Pattern 5: Range with LPA/L/Lacs/Lakhs "15-20 LPA" ──
+    m = re.search(r"([\d.]+)\s*[-–—to]+\s*([\d.]+)\s*(?:lpa|lakhs?|lacs?|l)\b", text, re.IGNORECASE)
+    if m:
+        try:
+            min_lpa = float(m.group(1))
+            max_lpa = float(m.group(2))
+            return _format_salary_result(min_lpa, max_lpa)
+        except ValueError:
+            pass
+
+    # ── Pattern 6: Single "15 LPA" / "15L" / "15 Lakhs" ──
+    m = re.search(r"([\d.]+)\s*(?:lpa|lakhs?|lacs?|l)\b", text, re.IGNORECASE)
+    if m:
+        try:
+            lpa = float(m.group(1))
+            return _format_salary_result(lpa, lpa)
+        except ValueError:
+            pass
+
+    # ── Pattern 7: Bare range "1500000-2500000" (absolute numbers) ──
+    m = re.search(r"(\d{5,})\s*[-–—to]+\s*(\d{5,})", text)
+    if m:
+        v1, v2 = float(m.group(1)), float(m.group(2))
+        min_lpa = _to_lpa(v1, is_monthly)
+        max_lpa = _to_lpa(v2, is_monthly)
+        return _format_salary_result(min_lpa, max_lpa)
+
+    # ── Pattern 8: Bare number "1500000" (absolute) ──
+    m = re.search(r"(\d{5,})", text)
+    if m:
+        v = float(m.group(1))
+        lpa = _to_lpa(v, is_monthly)
+        return _format_salary_result(lpa, lpa)
+
+    # ── Pattern 9: Range without unit "15-20" (assume LPA if reasonable) ──
+    m = re.search(r"([\d.]+)\s*[-–—]\s*([\d.]+)", text)
+    if m:
+        try:
+            v1, v2 = float(m.group(1)), float(m.group(2))
+            # Only treat as LPA if values look reasonable (1-200)
+            if 1 <= v1 <= 200 and 1 <= v2 <= 200:
+                min_lpa = min(v1, v2)
+                max_lpa = max(v1, v2)
+                return _format_salary_result(min_lpa, max_lpa)
+        except ValueError:
+            pass
+
+    return (None, None, "")
+
+
+def _indian_number_to_float(s: str) -> float | None:
+    """Convert Indian comma-formatted number to float.
+    "12,00,000" → 1200000.0
+    "18,00,000" → 1800000.0
+    """
+    try:
+        return float(s.replace(",", ""))
+    except (ValueError, AttributeError):
+        return None
+
+
+def _to_lpa(amount: float, is_monthly: bool = False) -> float:
+    """Convert an absolute amount to LPA (lakhs per annum).
+
+    If is_monthly: multiply by 12 first.
+    If amount > 999: it's in absolute terms (e.g. 1500000 = 15 LPA).
+    If amount <= 200: it's already in LPA (e.g. 15 = 15 LPA).
+    """
+    if is_monthly:
+        amount = amount * 12
+
+    if amount > 999:
+        return round(amount / 100000, 1)  # Convert to lakhs
+    return round(amount, 1)
+
+
+def _format_salary_result(min_lpa, max_lpa):
+    """Format the final salary result tuple."""
+    if min_lpa is None or max_lpa is None:
+        return (None, None, "")
+
+    # Ensure min <= max
+    if min_lpa > max_lpa:
+        min_lpa, max_lpa = max_lpa, min_lpa
+
+    # Sanity check: reject obviously wrong values
+    if max_lpa > 500 or min_lpa < 0:
+        return (None, None, "")
+
+    # Format display string
+    def _fmt(v):
+        return str(int(v)) if v == int(v) else f"{v:.1f}"
+
+    if min_lpa == max_lpa:
+        display = f"{_fmt(min_lpa)} LPA"
+    else:
+        display = f"{_fmt(min_lpa)}-{_fmt(max_lpa)} LPA"
+
+    return (min_lpa, max_lpa, display)
 
 
 # ── Shortlist tagging ────────────────────────────────────────────────

@@ -551,6 +551,40 @@
   .outreach-actions button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
   .outreach-hint { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
 
+  /* --- Company Research Card --- */
+  .company-card { width: 700px; max-width: 92vw; }
+  .company-card h3 { margin: 0 0 4px 0; font-size: 20px; }
+  .company-card .subtitle { font-size: 13px; color: var(--text-dim); margin-bottom: 18px; }
+  .company-card .card-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;
+  }
+  .card-stat {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px; text-align: center;
+  }
+  .card-stat .stat-value { font-size: 26px; font-weight: 700; color: var(--accent); }
+  .card-stat .stat-label { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .card-section { margin-bottom: 14px; }
+  .card-section h4 { font-size: 13px; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .card-tag {
+    display: inline-block; background: var(--surface2); border: 1px solid var(--border);
+    padding: 3px 10px; border-radius: 14px; font-size: 12px;
+  }
+  .card-list { list-style: none; padding: 0; }
+  .card-list li {
+    padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .card-list li:last-child { border-bottom: none; }
+  .card-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .card-actions button {
+    padding: 8px 18px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); cursor: pointer;
+    font-size: 13px; transition: all 0.15s;
+  }
+  .card-actions button:hover { border-color: var(--accent); }
+
   .active-filters {
     display: flex;
     gap: 8px;
@@ -1323,6 +1357,20 @@
   </div>
 </div>
 
+<!-- Company Research Card Modal -->
+<div class="modal-overlay" id="companyCardModal">
+  <div class="modal-content company-card">
+    <span class="modal-close" onclick="closeCompanyCard()">&times;</span>
+    <h3 id="ccName">Company Name</h3>
+    <div class="subtitle" id="ccSubtitle"></div>
+    <div class="card-grid" id="ccStats"></div>
+    <div id="ccSections"></div>
+    <div class="card-actions">
+      <button onclick="closeCompanyCard()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===================== STATE =====================
 const state = {
@@ -1472,11 +1520,11 @@ const TAB_CONFIG = {
       { key: '_star', label: '\u2606', render: starCell },
       { key: 'platform', label: 'Platform', render: platformBadge },
       { key: 'title', label: 'Title', render: (v, row) => jobLink(v, row.job_url) },
-      { key: 'company', label: 'Company' },
+      { key: 'company', label: 'Company', render: companyCell },
       { key: 'company_type', label: 'Co. Type', render: typeBadge },
       { key: 'role_type', label: 'Role Type', render: typeBadge },
       { key: 'location', label: 'Location' },
-      { key: 'salary', label: 'Salary', render: salaryDisplay },
+      { key: 'salary_normalized', label: 'Salary', render: salaryDisplay },
       { key: 'experience_required', label: 'Exp. Req.' },
       { key: 'date_posted', label: 'Posted' },
       { key: 'relevance_score', label: 'Score', render: scoreBadge },
@@ -1488,7 +1536,7 @@ const TAB_CONFIG = {
   companies: {
     columns: [
       { key: '_star', label: '\u2606', render: starCell },
-      { key: 'company', label: 'Company' },
+      { key: 'company', label: 'Company', render: companyCell },
       { key: 'total_openings', label: 'Openings', render: v => `<strong>${v || 0}</strong>` },
       { key: 'roles', label: 'Roles', render: pipeTags },
       { key: 'platforms', label: 'Platforms', render: platformTags },
@@ -1618,10 +1666,19 @@ function linkedinLink(url) {
 
 function companyWithLink(name, url) {
   if (!name || name === 'nan') return '<span style="color:var(--text-dim)">-</span>';
+  let html = '';
   if (url && String(url).startsWith('http')) {
-    return `<a class="link-btn" href="${esc(url)}" target="_blank" rel="noopener">${esc(name)}</a>`;
+    html += `<a class="link-btn" href="${esc(url)}" target="_blank" rel="noopener" style="margin-right:4px">${esc(name)}</a>`;
+  } else {
+    html += `<span>${esc(name)}</span>`;
   }
-  return esc(name);
+  html += ` <span style="cursor:pointer;font-size:10px;color:var(--text-dim)" onclick="event.stopPropagation();openCompanyCard('${esc(name).replace(/'/g, "\\'")}')" title="Company research card">&#9432;</span>`;
+  return html;
+}
+
+function companyCell(name) {
+  if (!name || name === 'nan') return '<span style="color:var(--text-dim)">-</span>';
+  return `<span style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px" onclick="event.stopPropagation();openCompanyCard('${esc(name).replace(/'/g, "\\'")}')" title="Click for company research card">${esc(name)}</span>`;
 }
 
 function websiteLink(url) {
@@ -1643,8 +1700,13 @@ function confidenceBar(val) {
 }
 
 function salaryDisplay(val) {
-  if (!val || val === 'nan' || val === 'NaN') return '<span style="color:var(--text-dim)">-</span>';
-  return esc(String(val));
+  if (!val || val === 'nan' || val === 'NaN' || val === '') return '<span style="color:var(--text-dim)">-</span>';
+  const s = String(val);
+  // Normalized values end with "LPA" — style them with accent
+  if (s.endsWith('LPA')) {
+    return `<span style="font-weight:600;white-space:nowrap">${esc(s)}</span>`;
+  }
+  return esc(s);
 }
 
 function scoreBadge(val) {
@@ -1886,6 +1948,15 @@ function parseSalaryNumber(salary, minAmt, maxAmt, currency) {
   return null;
 }
 
+function _lpaBracket(lpa) {
+  if (lpa < 5) return 'Under 5L';
+  if (lpa <= 10) return '5L - 10L';
+  if (lpa <= 20) return '10L - 20L';
+  if (lpa <= 50) return '20L - 50L';
+  if (lpa <= 100) return '50L - 1Cr';
+  return '1Cr+';
+}
+
 function getSalaryBracket(salary, minAmt, maxAmt, currency) {
   const parsed = parseSalaryNumber(salary, minAmt, maxAmt, currency);
   if (!parsed) return null;
@@ -2105,9 +2176,14 @@ function getFilteredData() {
     }
   }
 
-  // Salary bracket filter
+  // Salary bracket filter (uses normalized LPA values if available, falls back to raw parsing)
   if (state.qSalary) {
     data = data.filter(row => {
+      const maxLpa = parseFloat(row.salary_max_lpa);
+      if (!isNaN(maxLpa) && maxLpa > 0) {
+        const bracket = _lpaBracket(maxLpa);
+        return bracket === state.qSalary;
+      }
       const bracket = getSalaryBracket(row.salary, row.min_amount, row.max_amount, row.currency);
       return bracket === state.qSalary;
     });
@@ -2552,6 +2628,152 @@ function toggleCategory(id) {
 // Initialize platform summary on load
 updatePlatformSummary();
 
+// ===================== COMPANY RESEARCH CARD =====================
+function openCompanyCard(companyName) {
+  if (!companyName) return;
+  const cn = companyName.toLowerCase().trim();
+
+  // Aggregate from all data sources
+  const jobs = state.jobs.filter(j => (j.company || '').toLowerCase().trim() === cn);
+  const hrContacts = state.hr.filter(h => (h.company || '').toLowerCase().trim() === cn);
+  const hiringSignals = state.hiring.filter(h => (h.company || '').toLowerCase().trim() === cn);
+  const summaryRow = state.summary.find(s => (s.company || '').toLowerCase().trim() === cn);
+
+  // --- Stats ---
+  const openRoles = jobs.length || (summaryRow ? (summaryRow.total_openings || 0) : 0);
+  const hrCount = hrContacts.length || (summaryRow ? (summaryRow.hr_contacts_found || 0) : 0);
+  const emailCount = hrContacts.filter(h => h.email && h.email !== '' && h.email !== 'nan').length
+                     || (summaryRow ? (summaryRow.emails_found || 0) : 0);
+
+  // Salary range from jobs
+  let salaryMin = null, salaryMax = null;
+  jobs.forEach(j => {
+    const mn = parseFloat(j.salary_min_lpa);
+    const mx = parseFloat(j.salary_max_lpa);
+    if (!isNaN(mn) && (salaryMin === null || mn < salaryMin)) salaryMin = mn;
+    if (!isNaN(mx) && (salaryMax === null || mx > salaryMax)) salaryMax = mx;
+  });
+  const salaryStr = salaryMin !== null && salaryMax !== null
+    ? (salaryMin === salaryMax ? `${salaryMin} LPA` : `${salaryMin}-${salaryMax} LPA`)
+    : '-';
+
+  // Average relevance score
+  const scores = jobs.map(j => parseInt(j.relevance_score)).filter(n => !isNaN(n) && n > 0);
+  const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+
+  // Platforms
+  const platforms = [...new Set(jobs.map(j => j.platform).filter(Boolean))];
+
+  // Locations
+  const locations = [...new Set(jobs.map(j => j.location).filter(l => l && l !== 'nan'))].slice(0, 8);
+
+  // Company type (most common)
+  const types = jobs.map(j => j.company_type).filter(t => t && t !== 'Unknown' && t !== 'nan');
+  const companyType = types.length ? _mode(types) : (summaryRow ? summaryRow.company_type : '');
+
+  // Role titles
+  const titles = [...new Set(jobs.map(j => j.title).filter(Boolean))].slice(0, 6);
+
+  // Role types
+  const roleTypes = [...new Set(jobs.map(j => j.role_type).filter(t => t && t !== 'General' && t !== 'nan'))];
+
+  // Experience range
+  let expMin = null, expMax = null;
+  jobs.forEach(j => {
+    const mn = parseFloat(j.min_experience_years);
+    const mx = parseFloat(j.max_experience_years);
+    if (!isNaN(mn) && (expMin === null || mn < expMin)) expMin = mn;
+    if (!isNaN(mx) && (expMax === null || mx > expMax)) expMax = mx;
+  });
+  const expStr = expMin !== null
+    ? (expMax !== null && expMax !== expMin ? `${expMin}-${expMax} years` : `${expMin}+ years`)
+    : '-';
+
+  // Populate modal
+  document.getElementById('ccName').textContent = companyName;
+  const subtitleParts = [];
+  if (companyType) subtitleParts.push(companyType);
+  if (platforms.length) subtitleParts.push('Found on: ' + platforms.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(', '));
+  document.getElementById('ccSubtitle').textContent = subtitleParts.join(' · ');
+
+  // Stats grid
+  const statsHtml = `
+    <div class="card-stat"><div class="stat-value">${openRoles}</div><div class="stat-label">Open Roles</div></div>
+    <div class="card-stat"><div class="stat-value">${hrCount}</div><div class="stat-label">HR Contacts</div></div>
+    <div class="card-stat"><div class="stat-value">${emailCount}</div><div class="stat-label">Emails Found</div></div>
+    <div class="card-stat"><div class="stat-value">${salaryStr}</div><div class="stat-label">Salary Range</div></div>
+    ${avgScore !== null ? `<div class="card-stat"><div class="stat-value">${avgScore}</div><div class="stat-label">Avg Relevance</div></div>` : ''}
+    <div class="card-stat"><div class="stat-value">${expStr}</div><div class="stat-label">Experience</div></div>
+  `;
+  document.getElementById('ccStats').innerHTML = statsHtml;
+
+  // Sections
+  let sectionsHtml = '';
+
+  if (titles.length) {
+    sectionsHtml += `<div class="card-section"><h4>Open Positions</h4><div class="card-tags">`;
+    titles.forEach(t => { sectionsHtml += `<span class="card-tag">${esc(t)}</span>`; });
+    sectionsHtml += `</div></div>`;
+  }
+
+  if (locations.length) {
+    sectionsHtml += `<div class="card-section"><h4>Locations</h4><div class="card-tags">`;
+    locations.forEach(l => { sectionsHtml += `<span class="card-tag">${esc(l)}</span>`; });
+    sectionsHtml += `</div></div>`;
+  }
+
+  if (roleTypes.length) {
+    sectionsHtml += `<div class="card-section"><h4>Role Focus</h4><div class="card-tags">`;
+    roleTypes.forEach(r => { sectionsHtml += `<span class="card-tag">${esc(r)}</span>`; });
+    sectionsHtml += `</div></div>`;
+  }
+
+  if (hrContacts.length) {
+    sectionsHtml += `<div class="card-section"><h4>HR Contacts</h4><ul class="card-list">`;
+    hrContacts.slice(0, 5).forEach(h => {
+      const name = h.hr_name || 'Unknown';
+      const title = h.hr_title || '';
+      const email = (h.email && h.email !== 'nan') ? h.email : '';
+      const li = h.linkedin_url && String(h.linkedin_url).startsWith('http')
+        ? `<a class="link-btn" href="${esc(h.linkedin_url)}" target="_blank" style="font-size:11px">LinkedIn</a>`
+        : '';
+      sectionsHtml += `<li><span>${esc(name)}${title ? ' · ' + esc(title) : ''}${email ? ' · ' + esc(email) : ''}</span>${li}</li>`;
+    });
+    if (hrContacts.length > 5) sectionsHtml += `<li style="color:var(--text-dim)">+${hrContacts.length - 5} more contacts</li>`;
+    sectionsHtml += `</ul></div>`;
+  }
+
+  if (hiringSignals.length) {
+    sectionsHtml += `<div class="card-section"><h4>Hiring Signals</h4><ul class="card-list">`;
+    hiringSignals.slice(0, 3).forEach(h => {
+      const name = h.name || '';
+      const headline = h.headline || '';
+      sectionsHtml += `<li><span>${esc(name)}${headline ? ' — ' + esc(headline.slice(0, 80)) : ''}</span></li>`;
+    });
+    sectionsHtml += `</ul></div>`;
+  }
+
+  document.getElementById('ccSections').innerHTML = sectionsHtml;
+
+  // Show modal
+  document.getElementById('companyCardModal').classList.add('show');
+}
+
+function closeCompanyCard() {
+  document.getElementById('companyCardModal').classList.remove('show');
+}
+
+// Close company card on outside click
+document.getElementById('companyCardModal').addEventListener('click', function(e) {
+  if (e.target === this) closeCompanyCard();
+});
+
+function _mode(arr) {
+  const freq = {};
+  arr.forEach(v => { freq[v] = (freq[v] || 0) + 1; });
+  return Object.entries(freq).sort((a, b) => b[1] - a[1])[0][0];
+}
+
 // ===================== OUTREACH TEMPLATE GENERATOR =====================
 let _outreachRow = null;
 
@@ -2636,7 +2858,7 @@ document.getElementById('outreachModal').addEventListener('click', function(e) {
 
 // Close modal on Escape key
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeOutreachModal();
+  if (e.key === 'Escape') { closeOutreachModal(); closeCompanyCard(); }
 });
 
 // ===================== KEYBOARD SHORTCUTS =====================

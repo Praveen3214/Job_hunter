@@ -179,6 +179,7 @@ def export_jobs(jobs_df: pd.DataFrame, output_dir: Path = OUTPUT_DIR) -> Path:
     # Select and order key columns (include whatever's available)
     priority_cols = [
         "platform", "title", "company", "location", "salary",
+        "salary_min_lpa", "salary_max_lpa", "salary_normalized",
         "job_url", "date_posted", "experience",
         "min_experience_years", "max_experience_years",
         "description", "search_keyword", "search_location", "scraped_at",
