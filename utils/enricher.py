@@ -579,6 +579,29 @@ _TIER1_CITIES = {
     "chennai", "pune", "gurugram", "gurgaon", "noida", "new delhi",
 }
 
+# Indian location signals (any of these → job is in India)
+_INDIA_SIGNALS = _TIER1_CITIES | {
+    "india", "kolkata", "ahmedabad", "jaipur", "lucknow", "chandigarh",
+    "kochi", "indore", "nagpur", "coimbatore", "vadodara", "thiruvananthapuram",
+    "bhubaneswar", "vizag", "visakhapatnam", "mangalore", "mysore", "surat",
+    "patna", "ranchi", "guwahati", "dehradun", "faridabad", "greater noida",
+    "navi mumbai", "thane", "pan india", "across india",
+}
+
+# Non-India signals (explicit foreign markers → heavy penalty)
+_NON_INDIA_SIGNALS = {
+    "united states", "usa", "u.s.", "new york", "san francisco", "california",
+    "london", "uk", "united kingdom", "dubai", "uae", "singapore", "toronto",
+    "canada", "australia", "sydney", "melbourne", "germany", "berlin", "paris",
+    "france", "japan", "tokyo", "hong kong", "china", "shanghai", "beijing",
+    "amsterdam", "netherlands", "zurich", "switzerland", "seattle", "boston",
+    "chicago", "los angeles", "texas", "florida", "denver", "austin",
+    "philippines", "manila", "vietnam", "thailand", "bangkok", "jakarta",
+    "indonesia", "saudi arabia", "riyadh", "qatar", "doha", "bahrain",
+    "ireland", "dublin", "spain", "madrid", "italy", "milan", "brazil",
+    "mexico", "south africa", "kenya", "nigeria", "new zealand", "auckland",
+}
+
 # Strong title signals (senior marketing roles)
 _TITLE_STRONG = [
     "cmo", "chief marketing", "vp marketing", "vp of marketing",
@@ -608,6 +631,7 @@ def _compute_relevance_score(row) -> int:
         Experience fit:   0-15 pts  (8-12 yrs=15, 5-15=10, outside=5, unknown=8)
         Salary:           0-15 pts  (>40L=15, 27-40L=12, 15-27L=8, <15L=3, unknown=8)
         Location:         0-10 pts  (Tier-1=10, India=7, Remote=6, other=3)
+        India filter:     -40 pts   (penalise jobs clearly outside India)
         Company type:     0-10 pts  (B2C/D2C=10, B2B=8, Mixed=6, Unknown=4)
         Freshness:        0-5 pts   (date present=5, missing=2)
     """
@@ -683,6 +707,18 @@ def _compute_relevance_score(row) -> int:
     else:
         score += 5  # Unknown
 
+    # ── India filter (-40 pts penalty) ──
+    is_india = any(s in location for s in _INDIA_SIGNALS)
+    is_remote = any(r in location for r in ("remote", "hybrid", "wfh", "work from home"))
+    is_foreign = any(s in location for s in _NON_INDIA_SIGNALS)
+
+    if is_foreign and not is_india:
+        # Clearly outside India — heavy penalty
+        score -= 40
+    elif not is_india and not is_remote and location.strip():
+        # Unknown location, not obviously India or remote — mild penalty
+        score -= 15
+
     # ── Company type (10 pts) ──
     if company_type in ("b2c", "d2c"):
         score += 10
@@ -700,7 +736,7 @@ def _compute_relevance_score(row) -> int:
     else:
         score += 2
 
-    return min(score, 100)
+    return max(0, min(score, 100))
 
 
 def _compute_shortlist(df: pd.DataFrame) -> pd.Series:

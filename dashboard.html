@@ -990,21 +990,21 @@
             <label>Platforms</label>
             <div class="multi-select" id="platformMultiSelect">
               <div class="multi-select-trigger" onclick="toggleMultiSelect('platformMultiSelect')">
-                <span class="ms-summary" id="platformSummary">0 selected</span>
+                <span class="ms-summary" id="platformSummary">None selected</span>
                 <span class="ms-arrow">&#9660;</span>
               </div>
               <div class="multi-select-dropdown">
                 <div class="multi-select-group">
                   <div class="ms-group-header">Job Boards <span class="ms-toggle-all" onclick="event.stopPropagation();toggleGroupPlatforms('boards')">Toggle All</span></div>
-                  <label class="multi-select-item"><input type="checkbox" data-platform="linkedin" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--linkedin)"></span> LinkedIn</label>
-                  <label class="multi-select-item"><input type="checkbox" data-platform="indeed" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--indeed)"></span> Indeed</label>
-                  <label class="multi-select-item"><input type="checkbox" data-platform="naukri" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--naukri)"></span> Naukri</label>
-                  <label class="multi-select-item"><input type="checkbox" data-platform="cutshort" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--cutshort)"></span> Cutshort</label>
-                  <label class="multi-select-item"><input type="checkbox" data-platform="instahyre" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--instahyre)"></span> Instahyre</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="linkedin" data-group="boards" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--linkedin)"></span> LinkedIn</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="indeed" data-group="boards" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--indeed)"></span> Indeed</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="naukri" data-group="boards" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--naukri)"></span> Naukri</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="cutshort" data-group="boards" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--cutshort)"></span> Cutshort</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="instahyre" data-group="boards" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--instahyre)"></span> Instahyre</label>
                   <label class="multi-select-item"><input type="checkbox" data-platform="wellfound" data-group="boards" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--wellfound)"></span> Wellfound</label>
-                  <label class="multi-select-item"><input type="checkbox" data-platform="iimjobs" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--iimjobs)"></span> IIMJobs</label>
-                  <label class="multi-select-item"><input type="checkbox" data-platform="hirist" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--hirist)"></span> Hirist</label>
-                  <label class="multi-select-item"><input type="checkbox" data-platform="weekday" data-group="boards" checked onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--weekday)"></span> Weekday</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="iimjobs" data-group="boards" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--iimjobs)"></span> IIMJobs</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="hirist" data-group="boards" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--hirist)"></span> Hirist</label>
+                  <label class="multi-select-item"><input type="checkbox" data-platform="weekday" data-group="boards" onchange="updatePlatformSummary()"> <span class="ms-dot" style="background:var(--weekday)"></span> Weekday</label>
                 </div>
                 <div class="multi-select-group">
                   <div class="ms-group-header">Recruiting Firms <span class="ms-toggle-all" onclick="event.stopPropagation();toggleGroupPlatforms('firms')">Toggle All</span></div>

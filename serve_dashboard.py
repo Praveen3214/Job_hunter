@@ -41,8 +41,12 @@ def start_scrape(config):
         cmd += ["-l", ",".join(locations)]
 
     platforms = config.get("platforms", [])
-    if platforms:
-        cmd += ["-p", ",".join(platforms)]
+    if not platforms:
+        with _state_lock:
+            _scrape_state["status"] = "error"
+            _scrape_state["log_lines"] = ["ERROR: No platforms selected. Please select at least one platform."]
+        return
+    cmd += ["-p", ",".join(platforms)]
 
     max_results = config.get("max_results")
     if max_results:
