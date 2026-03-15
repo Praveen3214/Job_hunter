@@ -34,6 +34,21 @@ DEFAULT_KEYWORDS = [
     "Marketing Lead",
     "Growth Marketing Lead",
     "Senior Marketing Manager",
+    # Tier 3 — Manager-level titles
+    "Marketing Manager",
+    "Growth Manager",
+    "Acquisition Manager",
+    "Performance Marketing Manager",
+    "Paid Marketing Manager",
+    "Growth Marketing Manager",
+    # Tier 4 — Domain combinations
+    "Performance Marketing",
+    "Paid Marketing",
+    "Growth Marketing",
+    "Paid Acquisition",
+    "Performance Marketer",
+    "Growth Marketer",
+    "Digital Marketer",
 ]
 
 DEFAULT_LOCATIONS = [
